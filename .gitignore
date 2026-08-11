@@ -1,0 +1,18 @@
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
+# Playwright MCP debug session artifacts (browser console logs / page snapshots) - not
+# deliverables, and may contain data from real logged-in sessions against the live app.
+/.playwright-mcp/
+
+# Local Claude Code session/tooling config - machine-local, not a shared project artifact.
+/.claude/
+
+# Secrets
+.env
