@@ -23,6 +23,10 @@ export default defineConfig({
   /* This suite runs against a real, shared remote dev server (not a local instance) -
    * keep concurrency modest so tests don't overwhelm it or read each other's timing noise. */
   workers: process.env.CI ? 1 : 3,
+  /* The default 30s is tight against that same shared remote server - flows spanning a
+   * create/archive/search round trip can occasionally run past it on nothing more than
+   * normal server-side lag (see tests/helpers/candidate-helpers.ts for documented cases). */
+  timeout: 45_000,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */

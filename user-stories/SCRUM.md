@@ -1,80 +1,74 @@
-# User Story: RMS
+# Feature: Manage Candidates
 
-## Story Title
-RMS (Recruitment Management System) designed to register candidates seeking employment. It manages interview schedules, test quiz outcomes, reports, and overall job management.
+**Module:** Candidate
+**Screen:** Dashboard > Candidates > List Candidates
+**Product:** ALLWEB RMS (Recruitment Management System)
 
-## Story Description
-RMS (Recruitment Management System) designed to register candidates seeking employment. It manages interview schedules, test quiz outcomes, reports, and overall job management.
+## Epic
 
+As a recruitment team, we need a centralized place to view, search, filter, and manage all job candidates so we can track them through the hiring pipeline from initial request to final decision.
 
-## Application URL
-https://rms-dev.allweb.com.kh/welcome
+## User Story
 
-## Test Credentials
-Credentials are not stored in this file. Copy `.env.example` to a local `.env`
-(gitignored, never committed) and set `FAPA_EMAIL` / `FAPA_PASSWORD` (and
-`---` for report-generation tests) there. The automated
-suite in `tests/fapa-test/` reads these same variables.
+**As a** Super Admin / recruiter
+**I want to** view a searchable, filterable list of all candidates with their key details and status
+**So that** I can quickly find a candidate, review their profile summary, and take the next action in the hiring process (schedule an interview, log activity, update status, or archive them).
 
+## Description
+
+The "Manage Candidates" page displays a paginated table of all candidates submitted to the system. Each row summarizes a candidate's personal details, academic background, application priority, current pipeline status, and interview schedule, with row-level actions for managing that candidate's record.
+
+## UI Components
+
+- **Header:** Page title "Manage Candidates" with subtitle "List all candidate", and breadcrumb `Dashboard > Candidates > List candidates`.
+- **Primary actions (top right):**
+  - `Archive` button — navigates to the archived candidates list.
+  - `+ Add` button — opens a form to create a new candidate record.
+- **Filter bar:** `Filter` dropdown for narrowing the candidate list (e.g. by status, university, priority).
+- **Search box:** Free-text search with placeholder "Search: Name, phone number, university, GPA, Status...", supporting lookups by name, phone number, university, GPA, or status.
+- **Candidate table** with columns:
+  - `NO.` — row index
+  - `PHOTO` — candidate avatar/initials
+  - `FULL NAME` (sortable) — candidate name with a secondary line showing their applied position/skill tag (e.g. "Software Testing Automation", "QA Automation")
+  - `GENDER`
+  - `AGE`
+  - `PHONE`
+  - `UNIVERSITY`
+  - `GPA` (sortable)
+  - `EXPERIENCE`
+  - `PRIORITY` (sortable) — e.g. Normal
+  - `STATUS` — inline dropdown badge (e.g. `NEW REQUEST`, `PASSED`) allowing status updates directly from the table
+  - `INTERVIEW` — scheduled interview date/time, or `N/A` if not yet scheduled
+  - `CREATED` (sortable) — record creation date/time
+  - `ACTION` — row-level action menu
+- **Pagination:** Page controls with total candidate count (e.g. "Total: 3").
+
+## Row Actions Menu
+
+Each candidate row exposes a quick-view (eye) icon and a "⋮" menu with:
+
+- **Modify** — edit candidate details
+- **Set Reminder** — create a follow-up reminder for this candidate
+- **Set Interview** — schedule an interview
+- **Add Activity Log** — record an activity/note on the candidate's history
+- **Add Interview Result** — log the outcome of an interview (disabled until an interview has been set/completed)
+- **Add to Archive** — move the candidate to the archived list
 
 ## Acceptance Criteria
 
-### AC1: Authentication
-- A user can log in with a valid email/password and is redirected to the Dashboard.
-- Invalid credentials show an error and keep the user on the login page.
-- Submitting the login form with empty fields shows inline "required" validation
-  for both Email and Password.
-- A "Forgot password?" link is available and navigates to a dedicated flow.
-- Signing out ends the session; protected routes then redirect back to /login.
+1. Given I navigate to Candidate > List candidates, the table displays all non-archived candidates with photo, full name, gender, age, phone, university, GPA, experience, priority, status, interview date, and created date.
+2. Given I type a search term (name, phone, university, or GPA) into the search box, the table filters to matching candidates only.
+3. Given I click the `Filter` dropdown, I can narrow the list by additional criteria (e.g. status, priority).
+4. Given I click a sortable column header (`FULL NAME`, `GPA`, `PRIORITY`, `CREATED`), the table re-sorts by that column.
+5. Given I click the status badge dropdown on a row, I can change the candidate's status inline without leaving the page.
+6. Given I click the `⋮` action menu on a row, I see Modify, Set Reminder, Set Interview, Add Activity Log, Add Interview Result, and Add to Archive options.
+7. Given a candidate has no interview scheduled yet, "Add Interview Result" is disabled until "Set Interview" has been used.
+8. Given I click `Add to Archive`, the candidate is removed from this list and appears in the `Archive` view instead.
+9. Given I click `+ Add`, I am taken to a form to create a new candidate record.
+10. Given the candidate list spans multiple pages, pagination controls let me navigate pages and show the total candidate count.
 
-### AC2: Navigation
-- The top navigation bar (Dashboard, Interview Schedule, Candidates, Demands, Report, Advance Report, Activities,Reminder, File Manager, Setting, Administration )
-  reaches every section when clicked.
-- Known gap: navigating directly to /markets (rather than clicking the nav
-  button) does not resolve to the Markets section — only the nav button
-  
+## Notes / Open Questions
 
-### Error Handling
-- Invalid login, empty required fields, and no-data report months all
-  produce a visible, specific message rather than a silent failure or a
-  broken page.
-- Real-data safety: destructive/creating actions (Add Client, Add User, Add
-  Currency, Import File, Edit ISIN row) must not be exercised for real by
-  automated tests unless explicitly intended, since this environment holds
-  real, production-like client and financial data.
-
-## Business Rules
-- Each of the 10 upload categories is scoped to a single calendar month per
-  import; re-importing the same category/month appears to update that
-  period's data (confirmed via repeated real imports in the Upload history).
-- A generated report's PDF content must trace back to the most recently
-  imported source data for that client/month — this is the basis of the
-  content-validation tests.
-- Once a report is marked "Validate PDF" / verified, that action is not
-  undone by the UI observed so far (treat as a one-way state change in tests).
-- The application manages real, production-like client and user data (not
-  synthetic fixtures) even in the "develop" environment — automated tests
-  must default to read-only interactions and cancel any create/edit dialog
-  unless a test is specifically and deliberately exercising a real write.
-- Report-generation tests are the one deliberate exception that writes real
-  data (client creation, password reset, file import), and they do so
-  against a dedicated synthetic client ("QA Automation Client") created
-  specifically for this purpose - never against a real production-like
-  client, including ones belonging to the account owner. The client's Excel
-  name, email, and password are all synthetic/randomized, and all 10 Excel
-  fixtures were updated so their embedded client-identifying columns
-  (Client / Propriétaire / Souscripteur) reference this same synthetic name.
-
-## Technical Notes
-- Use Playwright for test automation.
-- Test across Chrome, Firefox, and Safari browsers.
-- Validate all form validation messages.
-- Test navigation flow and back button behavior.
-
-## Definition of Done
-- [x] All acceptance criteria have test cases
-- [x] Manual exploratory testing completed
-- [x] Automated test scripts created and passing
-- [x] Test results documented
-- [x] Bugs logged for any failures
-- [x] Code committed to repository
+- Confirm whether GPA of `1` (Miss. Vannyda PICH) is a valid/expected value or a data entry issue — GPA scale should be clarified (e.g. out of 4.0).
+- Confirm whether `EXPERIENCE` being `N/A` for all listed candidates is expected or indicates the field is not yet being populated on candidate creation.
+- Confirm access control: is inline status editing and archiving available to all roles, or restricted to Super Admin/specific permissions?

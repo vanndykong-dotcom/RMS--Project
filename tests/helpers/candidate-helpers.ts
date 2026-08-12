@@ -206,8 +206,10 @@ export async function clickRowMenuItem(page: Page, rowName: RegExp | string, ite
       await page.getByRole('menuitem', { name: itemName }).click({ timeout: 5000 });
       return;
     } catch (error) {
+      // If the page/context/browser is already gone, retrying (or even pressing Escape)
+      // can't help and would throw its own "Target closed" error that masks the real one.
+      if (page.isClosed() || attempt === attempts) throw error;
       await page.keyboard.press('Escape').catch(() => {});
-      if (attempt === attempts) throw error;
       // Brief pause before reopening: a background refresh that raced the previous attempt
       // is usually done settling by now, so the reopen is less likely to race another one.
       await page.waitForTimeout(400);
