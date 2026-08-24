@@ -2,7 +2,7 @@
 // seed: tests/seed-candidate.spec.ts
 
 import { test, expect } from '@playwright/test';
-import { login, goToCandidateList, createSyntheticCandidate, searchFor, clickRowMenuItem, archiveCandidateFromActiveList, ensureOnCandidateList, waitForRowAfterWrite } from '../helpers/candidate-helpers';
+import { login, goToCandidateList, createSyntheticCandidate, searchFor, clickRowMenuItem, archiveCandidateFromActiveList, ensureOnCandidateList, waitForRowAfterWrite, pickFutureCalendarDate } from '../helpers/candidate-helpers';
 
 test.describe('A. Manage Candidates - List Page', () => {
   test('A9. Row action menu - Set Reminder', async ({ page }) => {
@@ -17,7 +17,11 @@ test.describe('A. Manage Candidates - List Page', () => {
     await clickRowMenuItem(page, name, /Set Reminder/);
     await expect(page.getByRole('heading', { name: 'Manage Create reminder' })).toBeVisible();
 
-    // 2. Fill in a title (Title is a plain textbox on this form) and save
+    // 2. Fill in a title (Title is a plain textbox on this form). The Date & time field
+    // auto-fills to the current moment, which this app's own validation rejects ("Invalid
+    // Date & time. Can't be current time") - a future date must be explicitly picked first,
+    // same underlying requirement as Set Interview (see pickFutureCalendarDate).
+    await pickFutureCalendarDate(page);
     await page.getByRole('textbox', { name: 'title' }).fill('QA E2E automated reminder test');
     await page.getByRole('button', { name: 'Save' }).click();
     await ensureOnCandidateList(page);

@@ -126,6 +126,43 @@ export async function selectComboboxOption(page: Page, fieldLabel: string, optio
 }
 
 /**
+ * Opens a "Open calendar" date/time field and picks a date `daysAhead` days from now,
+ * confirming via the "done" button. A previous version of these tests hardcoded a fixed
+ * calendar day (e.g. "August 20") - that was a valid future date when first written but
+ * silently became a disabled *past* date as real time passed, hanging every click on it
+ * (see report). Computing the target date relative to "now", and returning it, lets every
+ * caller build matching assertions/lookups without re-deriving the date itself.
+ */
+// Kept small (rather than e.g. 14) so the picked date almost always stays within the
+// currently-displayed month - callers that then look for the event on the Interview
+// Schedule calendar (a separate widget from this date picker) only check the month
+// that's already on screen and don't navigate it, so a cross-month date would hide there.
+export async function pickFutureCalendarDate(page: Page, daysAhead = 3): Promise<Date> {
+  await page.getByRole('button', { name: 'Open calendar' }).click();
+
+  const target = new Date();
+  target.setDate(target.getDate() + daysAhead);
+  const monthAbbrev = target.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+  const monthFull = target.toLocaleString('en-US', { month: 'long' });
+  const day = target.getDate();
+  const year = target.getFullYear();
+
+  // The calendar opens on the current month - step forward via "Next month" until its
+  // header shows the target month/year (a no-op when daysAhead keeps it in the same month).
+  const periodButton = page.locator('.mat-calendar-period-button');
+  const nextMonthButton = page.getByRole('button', { name: 'Next month' });
+  for (let i = 0; i < 12; i += 1) {
+    const label = (await periodButton.innerText()).toUpperCase();
+    if (label.includes(monthAbbrev) && label.includes(String(year))) break;
+    await nextMonthButton.click();
+  }
+
+  await page.getByRole('gridcell', { name: `${monthFull} ${day},` }).click();
+  await page.getByRole('button').filter({ hasText: 'done' }).click();
+  return target;
+}
+
+/**
  * Fills the list's search box and waits for the resulting filtered-list request to resolve.
  *
  * The app debounces the search box server-side: the filtered GET request fires some time

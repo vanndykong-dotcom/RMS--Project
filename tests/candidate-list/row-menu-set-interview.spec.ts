@@ -2,7 +2,7 @@
 // seed: tests/seed-candidate.spec.ts
 
 import { test, expect } from '@playwright/test';
-import { login, goToCandidateList, createSyntheticCandidate, searchFor, openRowMenu, clickRowMenuItem, archiveCandidateFromActiveList, selectComboboxOption } from '../helpers/candidate-helpers';
+import { login, goToCandidateList, createSyntheticCandidate, searchFor, openRowMenu, clickRowMenuItem, archiveCandidateFromActiveList, selectComboboxOption, pickFutureCalendarDate } from '../helpers/candidate-helpers';
 
 test.describe('A. Manage Candidates - List Page', () => {
   test('A10. Row action menu - Set Interview', async ({ page }) => {
@@ -28,10 +28,8 @@ test.describe('A. Manage Candidates - List Page', () => {
     await selectComboboxOption(page, 'Interviewers *', 'Chamrong THOR');
     await page.keyboard.press('Escape');
 
-    // 3. Fill in a future interview date/time (pick a day in the visible month) and save
-    await page.getByRole('button', { name: 'Open calendar' }).click();
-    await page.getByRole('gridcell', { name: 'August 20,' }).click();
-    await page.getByRole('button').filter({ hasText: 'done' }).click();
+    // 3. Fill in a future interview date/time and save
+    const interviewDate = await pickFutureCalendarDate(page);
 
     // 4. Select "Apply for"
     await selectComboboxOption(page, 'Apply for', 'Software Testing Automation');
@@ -47,7 +45,8 @@ test.describe('A. Manage Candidates - List Page', () => {
     // 3. The candidate's Interview column now shows the scheduled date/time (list may need reload)
     await page.reload();
     await searchFor(page, 'Candidate A10');
-    await expect(page.getByRole('row', { name })).toContainText('20/Aug/2026');
+    const displayDate = `${String(interviewDate.getDate()).padStart(2, '0')}/${interviewDate.toLocaleString('en-US', { month: 'short' })}/${interviewDate.getFullYear()}`;
+    await expect(page.getByRole('row', { name })).toContainText(displayDate);
 
     // 4. The same interview appears in the Interview Schedule module (some days render more
     // events than fit visually, so this checks DOM presence rather than strict visibility)

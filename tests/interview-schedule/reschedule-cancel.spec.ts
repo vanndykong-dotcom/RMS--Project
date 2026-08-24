@@ -3,7 +3,7 @@
 
 import { test, expect } from '@playwright/test';
 import {
-  login, goToCandidateList, createSyntheticCandidate, searchFor, openRowMenu, archiveCandidateFromActiveList, ensureOnCandidateList, selectComboboxOption,
+  login, goToCandidateList, createSyntheticCandidate, searchFor, openRowMenu, archiveCandidateFromActiveList, ensureOnCandidateList, selectComboboxOption, pickFutureCalendarDate,
 } from '../helpers/candidate-helpers';
 
 test.describe('D. Interview Schedule Module', () => {
@@ -25,9 +25,7 @@ test.describe('D. Interview Schedule Module', () => {
 
     // A date/time must be explicitly picked - the field's auto-filled default is left
     // marked invalid and silently blocks Save otherwise (see A10 for the same requirement).
-    await page.getByRole('button', { name: 'Open calendar' }).click();
-    await page.getByRole('gridcell', { name: 'August 20,' }).click();
-    await page.getByRole('button').filter({ hasText: 'done' }).click();
+    const interviewDate = await pickFutureCalendarDate(page);
 
     await selectComboboxOption(page, 'Apply for', 'Software Testing Automation');
     const saveButton = page.getByRole('button', { name: 'Save' });
@@ -51,8 +49,7 @@ test.describe('D. Interview Schedule Module', () => {
     // still be exercised.
     await page.screenshot({ path: 'defect-D2-calendar-event-title-zero-width.png' });
 
-    const now = new Date();
-    const bookedDateIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-20`;
+    const bookedDateIso = `${interviewDate.getFullYear()}-${String(interviewDate.getMonth() + 1).padStart(2, '0')}-${String(interviewDate.getDate()).padStart(2, '0')}`;
     const eventChip = page
       .locator(`.fc-daygrid-day[data-date="${bookedDateIso}"]`)
       .locator('.custom-calendar-event')
