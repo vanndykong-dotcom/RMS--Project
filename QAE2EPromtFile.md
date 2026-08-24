@@ -11,7 +11,7 @@ This prompt set guides you through a complete 7-step QA workflow using MCP serve
 **Prompt:**
 ```
 I need to start a new testing workflow. Please read the user story from the file:
-user-stories/scrum.md
+user-stories/scrum.md, scrum_InterviewSchedule.md, scrum_AdvanceReport.md and scrum_JobManagement.md
 
 Summarize the key requirements, acceptance criteria, and testing scope.
 ```

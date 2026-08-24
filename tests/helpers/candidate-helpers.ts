@@ -1,4 +1,4 @@
-import { Page, expect } from '@playwright/test';
+import { Page, Locator, expect } from '@playwright/test';
 
 const BASE_URL = 'https://rms-dev.allweb.com.kh';
 
@@ -14,6 +14,39 @@ export async function goToCandidateList(page: Page) {
   await page.getByRole('tree').getByRole('button', { name: 'Candidate' }).click();
   await expect(page).toHaveURL(/\/admin\/candidate/);
   await expect(page.getByRole('heading', { name: 'Manage Candidates' })).toBeVisible();
+}
+
+export async function goToInterviewSchedule(page: Page) {
+  await page.getByRole('tree').getByRole('button', { name: 'Interview Schedule' }).click();
+  await expect(page).toHaveURL(/\/admin\/calendar/);
+  await expect(page.getByRole('heading', { name: 'Manage Interview Schedule' })).toBeVisible();
+}
+
+export async function goToAdvanceReport(page: Page) {
+  await page.getByRole('tree').getByRole('button', { name: 'Advance Report' }).click();
+  await expect(page).toHaveURL(/\/admin\/candidate\/advance-report/);
+  await expect(page.getByRole('heading', { name: 'Manage Candidates Advance Report' })).toBeVisible();
+}
+
+/**
+ * Fills the calendar toolbar's own search box (distinct from the unrelated global topbar
+ * search) and waits for the resulting debounced filter request to resolve. Mirrors
+ * searchFor()'s "fill + waitForResponse(filter=...)" shape, but targets the interview
+ * endpoint (`/rms-service/api/v1/interview?...&filter=`) that the calendar's search hits,
+ * not the candidate-list endpoint searchFor() waits on.
+ */
+export async function searchCalendar(page: Page, term: string) {
+  const search = page.getByPlaceholder('Search interviews, candidates...');
+  const waitForFilteredResponse = page.waitForResponse((res) => {
+    if (res.request().method() !== 'GET') return false;
+    try {
+      return new URL(res.url()).searchParams.get('filter') === term;
+    } catch {
+      return false;
+    }
+  }, { timeout: 8000 }).catch(() => {});
+  await search.fill(term);
+  await waitForFilteredResponse;
 }
 
 /**
@@ -257,4 +290,178 @@ export async function clickRowMenuItem(page: Page, rowName: RegExp | string, ite
 export async function archiveCandidateFromActiveList(page: Page, rowName: RegExp | string) {
   await clickRowMenuItem(page, rowName, 'Add to archive');
   await page.getByRole('button', { name: 'Confirm' }).click();
+}
+
+/**
+ * Navigates to the Job Description list via the sidebar (Setting -> Job), matching the
+ * confirmed pattern in tests/navigation/nav-setting.spec.ts: "Toggle Setting" expands the
+ * submenu WITHOUT navigating (URL stays on the current page), then "Job" performs the actual
+ * navigation. A raw page.goto() straight to /admin/setting/job is deliberately avoided here -
+ * per the exploratory results, a full page reload on this protected route intermittently
+ * re-triggers a Keycloak silent-SSO check that this client isn't configured for, bouncing to
+ * /welcome?error=unauthorized_client... even with a valid session.
+ */
+export async function goToJobDescriptions(page: Page) {
+  const sidebarTree = page.getByRole('tree');
+  const jobButton = sidebarTree.getByRole('button', { name: 'Job' });
+  // "Toggle Setting" is a real open/close TOGGLE, not an idempotent "expand" - confirmed live,
+  // the sidebar is a persistent component that survives in-app navigation (it isn't re-created
+  // per route), so its expanded/collapsed state carries over from any earlier call. Calling this
+  // helper a second time in the same page session (e.g. navigating away and back, as
+  // breadcrumb.spec.ts does) would otherwise click Toggle on an already-expanded submenu,
+  // collapsing it, then hang waiting for the now-hidden "Job" item. Only toggle when needed.
+  if (!(await jobButton.isVisible().catch(() => false))) {
+    await sidebarTree.getByRole('button', { name: 'Toggle Setting' }).click();
+  }
+  await jobButton.click();
+  await expect(page).toHaveURL(/\/admin\/setting\/job$/);
+  await expect(page.getByRole('heading', { name: 'Manage Job Description' })).toBeVisible();
+}
+
+/**
+ * Fills the Job Description list's own search box and waits for the resulting debounced
+ * filter request to resolve. There are TWO `input[placeholder="Search"]` elements on this
+ * page (the sidebar tree's own filter box, plus this list's own box) - both live inside an
+ * `app-aw-search-box` component, and the sidebar one additionally carries a `search-sidebar`
+ * class, which is the only reliable way to exclude it (ancestor-scoping by `app-aw-search-box`
+ * alone still matches both - see exploratory results insight #2).
+ */
+export async function searchJobDescriptions(page: Page, term: string) {
+  const search = page.locator('app-aw-search-box:not(.search-sidebar) input[placeholder="Search"]');
+  const waitForFilteredResponse = page.waitForResponse((res) => {
+    if (res.request().method() !== 'GET') return false;
+    try {
+      return new URL(res.url()).searchParams.get('filter') === term;
+    } catch {
+      return false;
+    }
+  }, { timeout: 8000 }).catch(() => {});
+  await search.fill(term);
+  await waitForFilteredResponse;
+}
+
+/**
+ * Locates a job description row by an EXACT match on its Title column (2nd <td>), rather than
+ * the row's full accessible name (which concatenates every column's text). This matters here
+ * specifically because the real "QA Automation" row's title is a literal substring of this
+ * module's own synthetic-row naming convention ("QA Automation Job Test {suffix} {ts}") - a
+ * bare `page.getByRole('row', { name: 'QA Automation' })` would ambiguously match both if a
+ * synthetic row happens to exist on the shared live list at the same moment (e.g. another spec
+ * file's write-cycle test running concurrently), so every job-management spec that needs a
+ * specific row (real or synthetic) should go through this helper instead.
+ */
+export function getJobRowByExactTitle(page: Page, title: string): Locator {
+  const escaped = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Two independent bugs were compounding here (confirmed live against
+  // https://rms-dev.allweb.com.kh/admin/setting/job), NOT a shifted/hidden column - td:nth-
+  // child(2) is in fact the real Title column (No./Title/Description/Status/Created At/Action):
+  //
+  // 1. The `has` locator below must be a RELATIVE selector. A locator built as
+  //    `page.locator('table tbody tr td:nth-child(2)')` (repeating the full ancestor chain)
+  //    can never match as a descendant of a candidate `<tr>` - a `<tr>` cannot contain a
+  //    nested `<table><tbody><tr>`, so `.filter({ has: <that locator> })` silently matches
+  //    ZERO rows, always, regardless of the text condition. It must be scoped relative to the
+  //    row instead (`td:nth-child(2)`, no repeated ancestor prefix).
+  // 2. The cell's actual markup is `<td><div class="row-content"> {title} </div></td>` - the
+  //    row-content div pads the text with a leading/trailing space, and Playwright's `hasText`
+  //    regex matching does not trim that before testing, so a plain `^title$` anchor never
+  //    matched either. Tolerate that whitespace explicitly.
+  const titleCell = page.locator('td:nth-child(2)').filter({ hasText: new RegExp(`^\\s*${escaped}\\s*$`) });
+  return page.locator('table tbody tr').filter({ has: titleCell });
+}
+
+/**
+ * Opens a job description row's kebab (more_vert / "More") menu. Takes an already-scoped row
+ * Locator (see getJobRowByExactTitle) rather than a row-name string, so callers never risk the
+ * accessible-name ambiguity described above.
+ */
+export async function openJobRowMenu(row: Locator, timeout = 5000) {
+  await row.locator('button[mattooltip="More"]').click({ timeout });
+}
+
+/**
+ * Opens a row's kebab menu and clicks a menu item by name, retrying (by reopening the menu, not
+ * just re-clicking the stale item) against the same kind of intermittent DOM-detach/background-
+ * refresh flakiness already documented for clickRowMenuItem() on the candidate list (see
+ * exploratory results insight #8).
+ *
+ * Both "Modify" and "Delete" menu items render an `<img alt="delete icon">` for their icon, so
+ * `itemName: 'Delete'` alone is ambiguous (its accessible name substring-matches "delete icon
+ * Modify" too, via the icon's own alt text) - pass the full accessible name
+ * ('delete icon Delete') to disambiguate.
+ */
+export async function clickJobRowMenuItem(row: Locator, itemName: RegExp | string, attempts = 5) {
+  const page = row.page();
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      await openJobRowMenu(row, 5000);
+      await page.getByRole('menuitem', { name: itemName }).click({ timeout: 5000 });
+      return;
+    } catch (error) {
+      if (page.isClosed() || attempt === attempts) throw error;
+      await page.keyboard.press('Escape').catch(() => {});
+      await page.waitForTimeout(400);
+    }
+  }
+}
+
+/**
+ * Creates a synthetic job description via the confirmed "+ Add" entry point
+ * (/admin/setting/job/create) and returns its unique title. Must be called while already on
+ * the Job Description list.
+ *
+ * The create form's `File *` field is required (Save silently no-ops without one, per the
+ * exploratory results) - the repo's existing CV fixture is reused here purely as a generic
+ * attachment, the same one candidate-helpers' own CV-upload flow uses.
+ *
+ * The Role field is `input[formcontrolname="title"]` - NOT `getByRole('textbox').first()`,
+ * which on this form matches the sidebar's own filter box instead (both are `role=textbox`,
+ * and the sidebar one sits first in the DOM) and produces a misleading "Job title required."
+ * error (see exploratory results insight #1).
+ */
+export async function createSyntheticJobDescription(page: Page, opts: { titleSuffix: string }): Promise<string> {
+  const title = `QA Automation Job Test ${opts.titleSuffix} ${Date.now()}`;
+
+  await page.getByRole('button', { name: 'Add' }).click();
+  await expect(page.getByRole('heading', { name: 'Manage Jobs' })).toBeVisible();
+  await page.locator('input[formcontrolname="title"]').fill(title);
+
+  const [fileChooser] = await Promise.all([
+    page.waitForEvent('filechooser'),
+    page.getByRole('button', { name: 'Browse' }).click(),
+  ]);
+  // Clicking Save immediately after setFiles() races the file's own background upload POST
+  // (/rms-service/api/v1/jobDescription/file/upload) - confirmed live: Save clicked before
+  // that request resolves silently no-ops (no toast, no error, no navigation - the form just
+  // deletes the orphaned temporary upload moments later) rather than surfacing any inline
+  // validation error, so there's nothing to detect after the fact. Waiting for the upload
+  // response first (same pattern as createSyntheticCandidate's CV upload) avoids the race.
+  await Promise.all([
+    page.waitForResponse((res) => res.url().includes('/jobDescription/file/upload') && res.ok()),
+    fileChooser.setFiles('tests/fixtures/qa-automation-test-cv.pdf'),
+  ]);
+
+  await page.getByRole('button', { name: 'Save' }).click();
+  // A generous timeout: this shared remote dev server occasionally takes longer than the
+  // default 5s on a full create round trip (see other documented cases in this file).
+  await expect(page).toHaveURL(/\/admin\/setting\/job$/, { timeout: 10000 });
+
+  const row = getJobRowByExactTitle(page, title);
+  await expect(row).toBeVisible({ timeout: 8000 });
+  return title;
+}
+
+/**
+ * Deletes a job description row via its own kebab menu -> Delete -> Confirm. Only ever call
+ * this against a synthetic row created by the test itself (see getJobRowByExactTitle /
+ * createSyntheticJobDescription) - never against one of the 11 real pre-existing rows, which
+ * must only ever be cancelled out of (see delete-confirmation-dialog.spec.ts).
+ */
+export async function deleteJobDescriptionRow(row: Locator) {
+  const page = row.page();
+  await clickJobRowMenuItem(row, 'delete icon Delete');
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.getByText('Remove Job Description')).toBeVisible();
+  await dialog.getByRole('button', { name: 'Confirm' }).click();
+  await expect(dialog).not.toBeVisible();
 }
