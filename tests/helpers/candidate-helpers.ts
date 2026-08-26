@@ -465,3 +465,93 @@ export async function deleteJobDescriptionRow(row: Locator) {
   await dialog.getByRole('button', { name: 'Confirm' }).click();
   await expect(dialog).not.toBeVisible();
 }
+
+/**
+ * Navigates to the Candidate list, searches for a specific candidate, and opens their
+ * Candidate Details page via the eye ("visibility") icon - confirmed live to be the row's
+ * FIRST action-column button, distinct from the LAST button (more_vert, the row's own separate
+ * menu - see openRowMenu/clickRowMenuItem). Per the exploratory results, this page must always
+ * be reached this way (in-app click), never a direct page.goto() to the detail URL - a cold/
+ * direct load was confirmed to sometimes render an empty breadcrumb (see
+ * breadcrumb-direct-navigation-caveat.spec.ts, which deliberately tests that caveat on its own).
+ */
+export async function goToCandidateDetails(page: Page, rowName: RegExp | string, searchTerm?: string) {
+  await goToCandidateList(page);
+  await searchFor(page, searchTerm ?? (typeof rowName === 'string' ? rowName : rowName.source));
+  const row = page.getByRole('row', { name: rowName });
+  await expect(row).toBeVisible();
+  // Same root cause as clickRowMenuItem (see its docstring): a background list refresh can
+  // detach this row's own eye/view button right as it's clicked. Retry the click itself with
+  // a bounded per-attempt timeout rather than let one detach burn the whole test timeout.
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      await row.getByRole('button').first().click({ timeout: 5000 });
+      lastError = undefined;
+      break;
+    } catch (error) {
+      lastError = error;
+      if (page.isClosed()) throw error;
+      await page.waitForTimeout(400);
+    }
+  }
+  if (lastError) throw lastError;
+  await expect(page).toHaveURL(/\/admin\/candidate\/candidateDetail\/\d+/);
+  await expect(page.locator('h2.profile-header-name')).toBeVisible();
+}
+
+/**
+ * Reads every label/value pair from the Candidate Details page's profile card, scoped via the
+ * nearest card-like ancestor of the "Gender" label. This page can also render an Interview
+ * score card and (for some candidates) an Experience card using the exact same
+ * `.text-label`/`.text-value` markup convention as the profile card - an unscoped, page-wide
+ * query would silently pick up those unrelated fields too (see exploratory results insight),
+ * so every profile-card assertion should go through this helper rather than querying
+ * `.text-label`/`.text-value` directly against the whole page.
+ */
+export async function getProfileCardFields(page: Page): Promise<Record<string, string>> {
+  // Confirmed live: the profile card has NO ancestor whose class contains "card" at all (the
+  // xpath `ancestor::*[contains(@class,"card")]` this used to use silently resolves to zero
+  // elements, so every field read through it comes back empty) - its real, unique wrapper is
+  // `.information-detail` (a single match on this page, containing exactly the 11 profile
+  // fields and none of the education/interview cards' own `.text-label`/`.text-value` pairs).
+  const profileCard = page.locator('.information-detail');
+  // Wait for the card to actually be populated before reading it - callers that read this
+  // right after an in-app navigation (e.g. back-navigation from the Edit page) can otherwise
+  // race the page's own re-render and read back an empty card (see report).
+  await expect(profileCard.locator('.text-label').first()).toBeVisible({ timeout: 10000 });
+  const labels = await profileCard.locator('.text-label').allTextContents();
+  const values = await profileCard.locator('.text-value').allTextContents();
+  const fields: Record<string, string> = {};
+  labels.forEach((label, i) => {
+    fields[label.trim()] = (values[i] ?? '').trim();
+  });
+  return fields;
+}
+
+/**
+ * Scrolls to and returns the Candidate Details page's embedded elFinder file manager, scoped
+ * to `.elfinder` so toolbar/status-bar locators built from it never collide with anything else
+ * on the page.
+ */
+export async function getFileManager(page: Page): Promise<Locator> {
+  const fileManager = page.locator('.elfinder');
+  await fileManager.scrollIntoViewIfNeeded();
+  return fileManager;
+}
+
+/**
+ * Reads the file manager's status-bar item count from its `title` attribute (e.g.
+ * "Items: 2,&nbsp;Sum: 517 KB") rather than its rendered text, which is split across child
+ * spans and unreliable to read directly (see exploratory results insight).
+ */
+export async function getFileManagerItemCount(fileManager: Locator): Promise<number> {
+  // Two elements share the `.elfinder-stat-size` class - the outer status-bar `<div>` that
+  // carries the `title="Items: {n}, Sum: {size}"` attribute this reads, and a nested
+  // `<span class="elfinder-stat-size elfinder-stat-size-recursive">Sum: {size}</span>` (no
+  // "Items:" prefix, no title attribute) that only appears once a folder is selected.
+  // Exclude the recursive span so this always resolves to the one real title-bearing div.
+  const title = await fileManager.locator('.elfinder-stat-size:not(.elfinder-stat-size-recursive)').getAttribute('title');
+  const match = title?.match(/Items:\s*(\d+)/);
+  return match ? Number(match[1]) : NaN;
+}
