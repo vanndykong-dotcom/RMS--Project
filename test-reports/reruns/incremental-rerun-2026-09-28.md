@@ -28,11 +28,25 @@ run were done with scripted Playwright and `npx playwright test`.
 | **4. Final full** | **Full suite, 181 tests (incl. 11 new), 3 workers** | **160** | **19** | **2** |
 | 5. Serial re-check | Run 4's 19 failures | 7 | 14 | 1 |
 | 6. Serial re-check | 11 remaining | 0 | 11 | 0 (all hit the login outage, ENV-1) |
+| 7. Serial re-check, login restored (~10:36) | 10 unverified | 4 | 6 | 0 |
 
-**Final status of the 181 tests:** 164 pass · 3 skipped with a stated reason · 4 fail by
-design (confirmed-defect documentation: A13, CL04-1b, CL04-1c, CL05-2b) · **10 healed but not
-re-verified** because login was down from ~09:55 (A1, A5, A8, A10, A11, E2, D2, JOB04-2,
-DASH06-3, DASH07-3).
+**Final status of the 181 tests:** 168 pass · 3 skipped with a stated reason · 4 fail by
+design (confirmed-defect documentation: A13, CL04-1b, CL04-1c, CL05-2b) · **6 blocked by
+server write latency** (A5, A8, A10, A11, E2, JOB04-2).
+
+Run 7 root cause for the 6: every one of them creates a record first, and the server was taking
+**over 30s to answer create requests**. Candidate creates (`POST /api/v1/candidate`) got no
+response within 30s, yet the records appeared in the list 1–3 minutes later; job creates stayed
+on `/create` past the 10s wait and landed later too. Before this re-run's last fix,
+`ensureOnCandidateList`'s fallback `page.goto()` **aborted** the in-flight create (trace: status
+-1), so candidates were silently never created and tests failed later with "row not found".
+`createSyntheticCandidate` now waits for the create response (30s) and fails with its HTTP status.
+Re-verify these 6 when saves return in a few seconds.
+
+**Possible new app defect (JOB04-2, needs confirmation):** in one run where creation succeeded,
+both toggle clicks on the synthetic job sent `PATCH /jobDescription/{id}/active/false`; the
+second click, meant to re-activate it, sent "false" again. Seen once, under heavy load; re-check
+before logging.
 
 Per module, final full run (pass/fail): Advance Report 23/2 · Authentication 5/0 · Candidate
 Add 2/0 · Candidate Archive 2/3 · Candidate Details 18/1 · Candidate List 22/9 · Candidate
@@ -71,7 +85,7 @@ behaviour and still fail (A13); the new ones (CL04-1b/c, CL05-2b) follow the sam
 
 ## 5. Housekeeping
 
-- **Orphaned synthetic candidates:** 9 left by runs 1–2 were archived mid-session; the active list went back to Total 35. Runs 3–6 left more (about 4+ `QaAutomationTest CANDIDATE …` rows). **Cleanup is blocked by ENV-1**; archive them once login works.
-- One synthetic record (`CANDIDATE E2 1790561629952`) was restored during an investigation and is still active.
+- **Orphaned synthetic candidates:** all of today's leftovers (9 after runs 1–2, about 20 after runs 3–7, plus `CANDIDATE E2 1790561629952`, which was restored during an investigation) were archived. The active list is back to **Total 35**. The one pre-existing synthetic row, `CAL05-3 1787544382116` from 24 Aug, was left as-is.
+- **Synthetic job descriptions:** 4 remain (`QA Automation Job Test JOB04-2 …`: 3 from today, 1 from 15 Sep). They can only be permanently deleted (no archive), so they were left for the team to decide.
 - `scripts/check-orphans.mjs` / `cleanup-orphans.mjs` still read `FAPA_*`; they need the `RMS_*` rename before they can be used.
 - Recommendation: give the write-heavy suites their own `workers: 1` Playwright project. Almost every remaining red result is concurrency on the one shared list.

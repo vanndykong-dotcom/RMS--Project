@@ -201,11 +201,21 @@ export async function createSyntheticCandidate(page: Page, opts: { lastNameSuffi
   await page.getByRole('button', { name: 'Next', exact: true }).click();
 
   await expect(page.getByRole('heading', { name: 'Preview Candidate Information' })).toBeVisible();
+  // Wait for the create call itself before navigating anywhere. Healed 2026-09-28: with the
+  // server slow, the POST took longer than ensureOnCandidateList's 8s redirect wait, whose
+  // fallback page.goto() then ABORTED the in-flight request (trace: POST /api/v1/candidate,
+  // status -1) - the candidate was never created, and the calling test failed later with a
+  // confusing "row not found". Failing here, with the status, makes that visible.
+  const createResponse = page.waitForResponse(
+    (res) => res.request().method() === 'POST' && new URL(res.url()).pathname.endsWith('/api/v1/candidate'),
+    { timeout: 30_000 },
+  );
   await page.getByRole('button', { name: 'Finish' }).click();
+  const created = await createResponse;
+  expect(created.ok(), `create candidate returned HTTP ${created.status()}`).toBe(true);
   // Known defect (see report): submitting sometimes triggers a blocked Keycloak silent-refresh
   // that reloads the SPA and strands it on an unrelated cached page instead of the candidate
-  // list. The record is still created either way, so navigate there explicitly rather than
-  // trusting the app's own post-submit redirect.
+  // list, so navigate there explicitly rather than trusting the app's own post-submit redirect.
   await ensureOnCandidateList(page);
 
   // Returns a case-insensitive regex matching the candidate's row, rather than a predicted

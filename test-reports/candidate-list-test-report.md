@@ -18,7 +18,7 @@ Part of the 2026-09-28 smart re-run: **FULL** for this story (new since the last
 | Scenarios planned | 25 (16 on existing specs, 9 new) |
 | Scenarios executed manually (exploratory) | 25 |
 | New automated tests | 11 in 7 files |
-| Automated tests in `tests/candidate-list/` | 31 (22 pass, 4 fail by design, 5 not verified) |
+| Automated tests in `tests/candidate-list/` | 31 (23 pass, 4 fail by design, 4 blocked by server write latency) |
 | New defects confirmed | 7 (2 Medium, 5 Low) plus 1 environment blocker |
 | Story corrections | 3 |
 | Open questions resolved from the story | 7 of 9 |
@@ -88,7 +88,7 @@ Treat CANDLIST-04-4 as confirmed by exploration, not by this test.
 |---|---|---|---|
 | Baseline, start of day (20 tests before the new specs) | 13 | — | 7 |
 | Full parallel run (3 workers) | **22** | 4 (CL04-1b, CL04-1c, CL05-2b, A13\*) | 5 (A1, A5, A8, A10, A11) |
-| Serial re-run of those 5 | — | — | **not verified**: login outage (ENV-1) |
+| Serial re-run of those 5, login restored | A1 ✓ | — | 4 (A5, A8, A10, A11): **blocked**, server took >30s to answer create requests (see re-run report, run 7) |
 
 \* A13 fails by design (known defect "archive search ignores last name", carried forward).
 
@@ -146,5 +146,5 @@ account `RMS_EMAIL` (Super ADMIN).
   1. Re-verify the 6 write-flow specs once login is stable (`npx playwright test --project=chromium --workers=1 tests/candidate-list`).
   2. Run the write suites serially in CI: add a `workers: 1` project for `candidate-list`, `candidate-archive`, `candidate-modify` and `interview-schedule` writes. This is a config change for the team to decide on.
   3. Rewrite CL04-1d to check across all pages.
-  4. Archive the synthetic candidates left over from today's final runs; the cleanup was blocked by the outage.
+  4. Done: today's leftover synthetic candidates are archived (active list back to 35).
   5. Take the open questions (GPA "0", scoring formula, the "Last interview result" label) to PM.
