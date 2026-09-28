@@ -1,6 +1,6 @@
 # Test Execution Report: Manage Interview Schedule (RMS-CAL)
 
-**User story:** `user-stories/scrum_InterviewSchedule.md`
+**User story:** `user-stories/scrum-interview-schedule.md`
 **Test plan:** `specs/interview-schedule-test-plan.md`
 **Exploratory results:** `specs/interview-schedule-exploratory-results.md`
 **Environment:** https://rms-dev.allweb.com.kh/admin/calendar (real, production-like data)
@@ -52,7 +52,7 @@ Key findings:
 6. **Defect found:** the Create Interview dialog's Candidate field has a search input present in
    the DOM but disabled via the `mat-select-search-hidden` class, and the option panel only
    lazy-loads in batches — a newly created candidate could not be found/selected, blocking a full
-   create-and-save flow. Screenshot: `defect-CAL05-3-candidate-select-no-search.png`.
+   create-and-save flow. Screenshot: `test-reports/evidence/defect-CAL05-3-candidate-select-no-search.png`.
 7. One synthetic candidate created during the blocked CAL05-3 attempt was archived immediately as
    cleanup; no interview record was ever created (the flow failed before Save).
 
@@ -97,7 +97,7 @@ defects.
 - **Expected:** The candidate is findable via the visible search input, consistent with search behavior elsewhere in the app.
 - **Actual:** A search input exists in the DOM (`mat-select-search-input`) but carries the `mat-select-search-hidden` class — it's inert. The option panel only lazy-loads ~10-21 options per scroll and is not alphabetically indexed, so a newly created candidate is impractical to find.
 - **Impact:** Scheduling a first interview for a new candidate directly from the calendar is impractical for a real recruiter, and blocks automated coverage of a full create-and-save flow (CAL05-3).
-- **Evidence:** `defect-CAL05-3-candidate-select-no-search.png`.
+- **Evidence:** `test-reports/evidence/defect-CAL05-3-candidate-select-no-search.png`.
 - **Suggested fix:** un-hide/enable the existing `mat-select-search` component for this field, or add server-side search consistent with the rest of the module.
 
 ### D2 — IN PROGRESS and FOLLOWING UP interview statuses are visually indistinguishable (Medium)

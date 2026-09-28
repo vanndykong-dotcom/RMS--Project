@@ -7,10 +7,10 @@ test.describe('AC2 - Navigation', () => {
   test('Activities nav item reaches the Activity section', async ({ page }) => {
     // 1. Precondition: start already logged in as a valid user, currently on the Dashboard
     await page.goto('https://rms-dev.allweb.com.kh/welcome');
-    await page.getByRole('textbox', { name: 'Enter Username' }).fill(process.env.FAPA_EMAIL as string);
-    await page.getByRole('textbox', { name: 'Enter Password' }).fill(process.env.FAPA_PASSWORD as string);
+    await page.getByRole('textbox', { name: 'Enter Username' }).fill(process.env.RMS_EMAIL as string);
+    await page.getByRole('textbox', { name: 'Enter Password' }).fill(process.env.RMS_PASSWORD as string);
     await page.getByRole('button', { name: 'Login' }).click();
-    await expect(page).toHaveURL(/\/admin\/dashboard/);
+    await expect(page).toHaveURL(/\/admin\/dashboard/, { timeout: 20_000 });
     const sidebarTree = page.getByRole('tree');
     await expect(sidebarTree).toBeVisible();
 

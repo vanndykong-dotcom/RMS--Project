@@ -2,7 +2,7 @@
 // seed: tests/seed-candidate.spec.ts
 
 import { test, expect } from '@playwright/test';
-import { login, goToCandidateList, createSyntheticCandidate, searchFor, openRowMenu, clickRowMenuItem, archiveCandidateFromActiveList, selectComboboxOption, pickFutureCalendarDate } from '../helpers/candidate-helpers';
+import { login, goToCandidateList, createSyntheticCandidate, searchFor, openRowMenu, clickRowMenuItem, archiveCandidateFromActiveList, selectComboboxOption, pickFutureCalendarDate, goToCalendarMonth } from '../helpers/candidate-helpers';
 
 test.describe('A. Manage Candidates - List Page', () => {
   test('A10. Row action menu - Set Interview', async ({ page }) => {
@@ -52,6 +52,10 @@ test.describe('A. Manage Candidates - List Page', () => {
     // events than fit visually, so this checks DOM presence rather than strict visibility)
     await page.getByRole('tree').getByRole('button', { name: 'Interview Schedule' }).click();
     await expect(page).toHaveURL(/\/admin\/calendar/);
+    // The interview is booked 3 days out, which can fall in NEXT month (e.g. run on 28 Sep ->
+    // 1 Oct); the month view only loads its own month's events, so move there first (healed
+    // 2026-09-28 - this step failed with the event simply not in the September view).
+    await goToCalendarMonth(page, interviewDate);
     await expect(page.locator('body')).toContainText('Software Testing Automation');
 
     // 5. Add interview result is now enabled (business rule: enabled once set, regardless of date)

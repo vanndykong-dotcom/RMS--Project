@@ -1,22 +1,22 @@
 # Performance Test Report: Page Load Timing
 
 **Environment:** https://rms-dev.allweb.com.kh (real, shared remote dev server)
-**Generated:** 2026-08-12T05:00:52.784Z
+**Generated:** 2026-09-28T02:45:12.884Z
 
 | Metric | Elapsed (ms) |
 |---|---|
-| Welcome page: goto -> visible | 541 |
-| Welcome page: TTFB | 3 |
-| Welcome page: DOMContentLoaded | 474 |
-| Welcome page: window.load | 480 |
-| Login submit -> Dashboard visible | 932 |
-| Navigate: Candidate | 68 |
-| Candidate list: search filter response | 493 |
-| Navigate: Interview Schedule | 96 |
-| Navigate: Demand | 101 |
-| Navigate: Report | 51 |
-| Navigate: Advance Report | 96 |
-| Navigate: Activity | 66 |
-| Navigate: Reminder | 79 |
-| Navigate: File Manager | 48 |
-| Navigate: Dashboard | 127 |
+| Welcome page: goto -> visible | 705 |
+| Welcome page: TTFB | 26 |
+| Welcome page: DOMContentLoaded | 647 |
+| Welcome page: window.load | 654 |
+| Login submit -> Dashboard visible | 1625 |
+| Navigate: Candidate | 70 |
+| Candidate list: search filter response | 501 |
+| Navigate: Interview Schedule | 77 |
+| Navigate: Demand | 83 |
+| Navigate: Report | 55 |
+| Navigate: Advance Report | 72 |
+| Navigate: Activity | 57 |
+| Navigate: Reminder | 58 |
+| Navigate: File Manager | 94 |
+| Navigate: Dashboard | 119 |

@@ -5,12 +5,15 @@
 // unfiltered/paginated list.
 
 import { test, expect } from '@playwright/test';
-import { login, goToJobDescriptions, searchJobDescriptions } from '../helpers/candidate-helpers';
+import { login, goToJobDescriptions, searchJobDescriptions, readJobListRowCount } from '../helpers/candidate-helpers';
 
 test.describe('RMS-JOB-02: Search job descriptions', () => {
   test('JOB02-2. Search is server-side and filters without a full page reload', async ({ page }) => {
     await login(page);
     await goToJobDescriptions(page);
+    // The real-row count drifts on this shared server (11 at planning, 10 on 2026-09-28 after
+    // two real rows were removed outside this suite) - compare against the count on load.
+    const initialRowCount = await readJobListRowCount(page);
 
     const urlBefore = page.url();
     await searchJobDescriptions(page, 'automation');
@@ -20,7 +23,7 @@ test.describe('RMS-JOB-02: Search job descriptions', () => {
     await expect(page.getByText(/^Total:\s*3$/)).toBeVisible();
 
     await searchJobDescriptions(page, '');
-    await expect(page.locator('table tbody tr')).toHaveCount(11);
-    await expect(page.getByText(/^Total:\s*11$/)).toBeVisible();
+    await expect(page.locator('table tbody tr')).toHaveCount(initialRowCount);
+    await expect(page.getByText(new RegExp(`^Total:\\s*${initialRowCount}$`))).toBeVisible();
   });
 });

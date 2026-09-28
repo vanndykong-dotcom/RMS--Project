@@ -6,12 +6,15 @@
 // Escape closes cleanly.
 
 import { test, expect } from '@playwright/test';
-import { login, goToJobDescriptions, getJobRowByExactTitle } from '../helpers/candidate-helpers';
+import { login, goToJobDescriptions, getJobRowByExactTitle, readJobListRowCount } from '../helpers/candidate-helpers';
 
 test.describe('RMS-JOB-05: View a job description\'s full detail (eye icon)', () => {
   test('JOB05-1. Eye icon opens an in-place dialog, not a page navigation', async ({ page }) => {
     await login(page);
     await goToJobDescriptions(page);
+    // The real-row count drifts on this shared server (11 at planning, 10 on 2026-09-28 after
+    // two real rows were removed outside this suite) - compare against the count on load.
+    const initialRowCount = await readJobListRowCount(page);
 
     const urlBefore = page.url();
     const row = getJobRowByExactTitle(page, 'QA Automation');
@@ -47,6 +50,6 @@ test.describe('RMS-JOB-05: View a job description\'s full detail (eye icon)', ()
 
     await page.keyboard.press('Escape');
     await expect(dialog).not.toBeVisible();
-    await expect(page.locator('table tbody tr')).toHaveCount(11);
+    await expect(page.locator('table tbody tr')).toHaveCount(initialRowCount);
   });
 });

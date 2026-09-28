@@ -4,12 +4,14 @@
 // asserts "fewer requests than keystrokes" rather than an exact count.
 
 import { test, expect } from '@playwright/test';
-import { login, goToInterviewSchedule } from '../helpers/candidate-helpers';
+import { login, goToInterviewSchedule, goToCalendarMonth, CALENDAR_SEED_MONTH } from '../helpers/candidate-helpers';
 
 test.describe('RMS-CAL-04: Search interviews and candidates', () => {
   test('CAL04-4. Search is debounced', async ({ page }) => {
     await login(page);
     await goToInterviewSchedule(page);
+    // Fixture interviews live in a fixed month, not the current-month default (see CALENDAR_SEED_MONTH).
+    await goToCalendarMonth(page, CALENDAR_SEED_MONTH);
 
     // The event pills load asynchronously after navigation; without waiting for at least one
     // to render, this baseline count can race the initial fetch and come back 0.

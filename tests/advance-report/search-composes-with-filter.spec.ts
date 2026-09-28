@@ -14,12 +14,14 @@
 // dismisses it (the STAFF selection itself survives - see RPT04-3) before reopening Filter.
 
 import { test, expect } from '@playwright/test';
-import { login, goToAdvanceReport } from '../helpers/candidate-helpers';
+import { login, goToAdvanceReport, setAdvanceReportDateRange, ADVANCE_REPORT_SEED_WEEK } from '../helpers/candidate-helpers';
 
 test.describe('RMS-RPT-05: Search within the report', () => {
   test('RPT05-2. Search composes with the active filter rather than replacing it', async ({ page }) => {
     await login(page);
     await goToAdvanceReport(page);
+    // Seeded rows live in a fixed week, not the current-week default (see ADVANCE_REPORT_SEED_WEEK).
+    await setAdvanceReportDateRange(page, ADVANCE_REPORT_SEED_WEEK);
 
     await page.getByText('Filter', { exact: true }).first().click();
     await page.getByText('STAFF', { exact: true }).click();

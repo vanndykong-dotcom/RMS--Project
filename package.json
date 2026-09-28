@@ -1,12 +1,20 @@
 {
   "name": "automation-rms",
   "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {},
+  "private": true,
+  "description": "Playwright E2E automation and QA documentation for ALLWEB RMS (Recruitment Management System)",
+  "scripts": {
+    "test": "playwright test",
+    "test:chromium": "playwright test --project=chromium --project=chromium-writes",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report",
+    "orphans:check": "node scripts/check-orphans.mjs",
+    "orphans:cleanup": "node scripts/cleanup-orphans.mjs"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "devDependencies": {
     "@playwright/test": "^1.62.1",
     "@types/node": "^26.1.2",

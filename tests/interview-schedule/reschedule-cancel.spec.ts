@@ -4,6 +4,7 @@
 import { test, expect } from '@playwright/test';
 import {
   login, goToCandidateList, createSyntheticCandidate, searchFor, openRowMenu, archiveCandidateFromActiveList, ensureOnCandidateList, selectComboboxOption, pickFutureCalendarDate,
+  goToCalendarMonth,
 } from '../helpers/candidate-helpers';
 
 test.describe('D. Interview Schedule Module', () => {
@@ -36,6 +37,10 @@ test.describe('D. Interview Schedule Module', () => {
     // 1. From Interview Schedule, open the entry
     await page.getByRole('tree').getByRole('button', { name: 'Interview Schedule' }).click();
     await expect(page).toHaveURL(/\/admin\/calendar/);
+    // The interview is booked 3 days out, which can fall in NEXT month (e.g. run on 28 Sep ->
+    // 1 Oct). The month view only loads its own month's events (startDate..endDate of the
+    // visible month), so move to the booked month first (healed 2026-09-28).
+    await goToCalendarMonth(page, interviewDate);
 
     // Known defect (see report): each calendar event chip is a flex row of
     // [.event-time, .event-title, .event-description], all `white-space: nowrap` with no
@@ -47,7 +52,7 @@ test.describe('D. Interview Schedule Module', () => {
     // visible). Captured here for evidence; the chip's wrapper (visible) is clicked below
     // instead of its invisible title text as a workaround so the rest of the scenario can
     // still be exercised.
-    await page.screenshot({ path: 'defect-D2-calendar-event-title-zero-width.png' });
+    await page.screenshot({ path: 'test-reports/evidence/defect-D2-calendar-event-title-zero-width.png' });
 
     const bookedDateIso = `${interviewDate.getFullYear()}-${String(interviewDate.getMonth() + 1).padStart(2, '0')}-${String(interviewDate.getDate()).padStart(2, '0')}`;
     const eventChip = page

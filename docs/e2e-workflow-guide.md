@@ -11,7 +11,7 @@ This prompt set guides you through a complete 7-step QA workflow using MCP serve
 **Prompt:**
 ```
 I need to start a new testing workflow. Please read the user story from the file:
-user-stories/scrum.md, scrum_Candidate Details.md
+user-stories/"**/scrum-*.md"
 
 Summarize the key requirements, acceptance criteria, and testing scope.
 ```
@@ -241,9 +241,7 @@ Please perform the following Git operations:
    - Add test execution report with results
    - Add automated test scripts for checkout process
    - Include validation, navigation, and edge case tests
-
-   Resolves SCRUM-101"
-
+  
 4. Push all changes to the Git repository
 
 5. Provide a summary of what was committed

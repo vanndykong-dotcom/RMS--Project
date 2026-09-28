@@ -12,12 +12,14 @@
 // reopening Filter.
 
 import { test, expect } from '@playwright/test';
-import { login, goToAdvanceReport } from '../helpers/candidate-helpers';
+import { login, goToAdvanceReport, setAdvanceReportDateRange, ADVANCE_REPORT_SEED_WEEK } from '../helpers/candidate-helpers';
 
 test.describe('RMS-RPT-04: Apply additional filters', () => {
   test('RPT04-2. Selecting a filter option narrows results', async ({ page }) => {
     await login(page);
     await goToAdvanceReport(page);
+    // Seeded rows live in a fixed week, not the current-week default (see ADVANCE_REPORT_SEED_WEEK).
+    await setAdvanceReportDateRange(page, ADVANCE_REPORT_SEED_WEEK);
 
     const totalText = page.getByText(/^Total:\s*\d+$/);
     await expect(totalText).toHaveText('Total: 1');

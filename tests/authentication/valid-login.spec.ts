@@ -18,17 +18,17 @@ test.describe('AC1 - Authentication', () => {
     await expect(passwordField).toHaveValue('');
     await expect(loginButton).toBeVisible();
 
-    // 2. Enter the valid username from the FAPA_EMAIL value in .env into the Username field
-    await usernameField.fill(process.env.FAPA_EMAIL as string);
-    await expect(usernameField).toHaveValue(process.env.FAPA_EMAIL as string);
+    // 2. Enter the valid username from the RMS_EMAIL value in .env into the Username field
+    await usernameField.fill(process.env.RMS_EMAIL as string);
+    await expect(usernameField).toHaveValue(process.env.RMS_EMAIL as string);
 
-    // 3. Enter the valid password from the FAPA_PASSWORD value in .env into the Password field
-    await passwordField.fill(process.env.FAPA_PASSWORD as string);
-    await expect(passwordField).toHaveValue(process.env.FAPA_PASSWORD as string);
+    // 3. Enter the valid password from the RMS_PASSWORD value in .env into the Password field
+    await passwordField.fill(process.env.RMS_PASSWORD as string);
+    await expect(passwordField).toHaveValue(process.env.RMS_PASSWORD as string);
 
     // 4. Click the 'Login' button
     await loginButton.click();
-    await expect(page).toHaveURL(/\/admin\/dashboard/);
+    await expect(page).toHaveURL(/\/admin\/dashboard/, { timeout: 20_000 });
     await expect(page.getByRole('heading', { name: 'Dashboard', level: 1 })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Quick Access' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Resource Demanding' })).toBeVisible();

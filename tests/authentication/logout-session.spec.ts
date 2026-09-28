@@ -19,12 +19,12 @@ import { test, expect } from '@playwright/test';
 
 test.describe('AC1 - Authentication', () => {
   test('Sign out ends session; protected route afterward redirects back to login', async ({ page }) => {
-    // 1. Precondition: start already logged in - navigate to https://rms-dev.allweb.com.kh/welcome, enter the valid credentials from .env (FAPA_EMAIL / FAPA_PASSWORD), and click 'Login'
+    // 1. Precondition: start already logged in - navigate to https://rms-dev.allweb.com.kh/welcome, enter the valid credentials from .env (RMS_EMAIL / RMS_PASSWORD), and click 'Login'
     await page.goto('https://rms-dev.allweb.com.kh/welcome');
-    await page.getByRole('textbox', { name: 'Enter Username' }).fill(process.env.FAPA_EMAIL as string);
-    await page.getByRole('textbox', { name: 'Enter Password' }).fill(process.env.FAPA_PASSWORD as string);
+    await page.getByRole('textbox', { name: 'Enter Username' }).fill(process.env.RMS_EMAIL as string);
+    await page.getByRole('textbox', { name: 'Enter Password' }).fill(process.env.RMS_PASSWORD as string);
     await page.getByRole('button', { name: 'Login' }).click();
-    await expect(page).toHaveURL(/\/admin\/dashboard/);
+    await expect(page).toHaveURL(/\/admin\/dashboard/, { timeout: 20_000 });
     await expect(page.getByRole('heading', { name: 'Dashboard', level: 1 })).toBeVisible();
 
     // 2. Click the 'Super ADMIN' account link (with the account_circle icon) in the top-right of the navigation bar

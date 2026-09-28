@@ -4,12 +4,14 @@
 // so matching against this real seeded candidate is safe per the real-data note.
 
 import { test, expect } from '@playwright/test';
-import { login, goToInterviewSchedule, searchCalendar } from '../helpers/candidate-helpers';
+import { login, goToInterviewSchedule, searchCalendar, goToCalendarMonth, CALENDAR_SEED_MONTH } from '../helpers/candidate-helpers';
 
 test.describe('RMS-CAL-04: Search interviews and candidates', () => {
   test('CAL04-2. Search filters visible events (happy path)', async ({ page }) => {
     await login(page);
     await goToInterviewSchedule(page);
+    // Fixture interviews live in a fixed month, not the current-month default (see CALENDAR_SEED_MONTH).
+    await goToCalendarMonth(page, CALENDAR_SEED_MONTH);
 
     // The event pills load asynchronously after navigation; without waiting for at least one
     // to render, this baseline count can race the initial fetch and come back 0.
