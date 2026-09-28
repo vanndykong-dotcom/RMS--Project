@@ -20,9 +20,13 @@ test.describe('RMS-CAND-01: View candidate header and status', () => {
     const color1 = await badge1.evaluate((el) => getComputedStyle(el).backgroundColor);
     expect(color1).toBe('rgb(253, 244, 219)');
 
-    await goToCandidateDetails(page, 'Sopheak PHAL'); // IN PROGRESS
+    // Sopheak PHAL was IN PROGRESS at planning and is ATTENDED on 2026-09-28 (changed on the
+    // shared server outside this suite). The defect only needs a status that differs from the
+    // first candidate's, so assert that rather than a specific, drift-prone value.
+    await goToCandidateDetails(page, 'Sopheak PHAL');
     const badge2 = page.locator('.profile-header-status span');
-    await expect(badge2).toHaveText(/IN PROGRESS/i);
+    await expect(badge2).not.toHaveText(/FOLLOWING UP/i);
+    await expect(badge2).toHaveText(/\S/);
     // Confirmed defect: identical class and computed color despite the different status text.
     await expect(badge2).toHaveClass('following');
     const color2 = await badge2.evaluate((el) => getComputedStyle(el).backgroundColor);

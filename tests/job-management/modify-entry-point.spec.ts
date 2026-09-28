@@ -7,12 +7,15 @@
 // Escape (or its own close control) instead.
 
 import { test, expect } from '@playwright/test';
-import { login, goToJobDescriptions, getJobRowByExactTitle, clickJobRowMenuItem } from '../helpers/candidate-helpers';
+import { login, goToJobDescriptions, getJobRowByExactTitle, clickJobRowMenuItem, readJobListRowCount } from '../helpers/candidate-helpers';
 
 test.describe('RMS-JOB-06: Row action menu - Modify, Delete, Share, Get file', () => {
   test('JOB06-2. Modify opens the pre-filled edit form (entry point only)', async ({ page }) => {
     await login(page);
     await goToJobDescriptions(page);
+    // The real-row count drifts on this shared server (11 at planning, 10 on 2026-09-28 after
+    // two real rows were removed outside this suite) - compare against the count on load.
+    const initialRowCount = await readJobListRowCount(page);
 
     const urlBefore = page.url();
     const row = getJobRowByExactTitle(page, 'QA Automation');
@@ -31,6 +34,6 @@ test.describe('RMS-JOB-06: Row action menu - Modify, Delete, Share, Get file', (
 
     // The row's data is unchanged in the list afterward.
     await expect(getJobRowByExactTitle(page, 'QA Automation')).toBeVisible();
-    await expect(page.locator('table tbody tr')).toHaveCount(11);
+    await expect(page.locator('table tbody tr')).toHaveCount(initialRowCount);
   });
 });

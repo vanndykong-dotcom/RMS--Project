@@ -48,7 +48,7 @@ test.describe('A. Manage Candidates - List Page', () => {
     // not a timing issue. Left asserting the expected (currently failing) behavior below,
     // rather than searching by a field that happens to work, so this keeps documenting the
     // defect instead of masking it.
-    await page.screenshot({ path: 'defect-A13-archive-search-ignores-lastname.png' });
+    await page.screenshot({ path: 'test-reports/evidence/defect-A13-archive-search-ignores-lastname.png' });
     await expect(page.getByRole('row', { name })).toBeVisible();
   });
 });

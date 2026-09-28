@@ -8,12 +8,15 @@
 // status-toggle-synthetic.spec.ts's cleanup step for that path).
 
 import { test, expect } from '@playwright/test';
-import { login, goToJobDescriptions, getJobRowByExactTitle, clickJobRowMenuItem } from '../helpers/candidate-helpers';
+import { login, goToJobDescriptions, getJobRowByExactTitle, clickJobRowMenuItem, readJobListRowCount } from '../helpers/candidate-helpers';
 
 test.describe('RMS-JOB-06: Row action menu - Modify, Delete, Share, Get file', () => {
   test('JOB06-3. Delete shows a confirmation dialog (cancel only, real row)', async ({ page }) => {
     await login(page);
     await goToJobDescriptions(page);
+    // The real-row count drifts on this shared server (11 at planning, 10 on 2026-09-28 after
+    // two real rows were removed outside this suite) - compare against the count on load.
+    const initialRowCount = await readJobListRowCount(page);
 
     const row = getJobRowByExactTitle(page, 'QA Automation');
     await clickJobRowMenuItem(row, 'delete icon Delete');
@@ -29,6 +32,6 @@ test.describe('RMS-JOB-06: Row action menu - Modify, Delete, Share, Get file', (
     await expect(dialog).not.toBeVisible();
 
     await expect(row).toBeVisible();
-    await expect(page.locator('table tbody tr')).toHaveCount(11);
+    await expect(page.locator('table tbody tr')).toHaveCount(initialRowCount);
   });
 });

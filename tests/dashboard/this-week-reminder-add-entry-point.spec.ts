@@ -11,6 +11,11 @@ test.describe('RMS-DASH-07: View This Week Reminder panel', () => {
     await login(page);
 
     const wrHeading = page.getByRole('heading', { name: 'This Week Reminder' });
+    // Healed 2026-09-28: the panel count was hardcoded to last week's 1 entry. What this step
+    // checks is that nothing got submitted, so compare against the count before the click.
+    await page.waitForLoadState('networkidle');
+    const cards = page.locator('app-reminder-report-card');
+    const cardsBefore = await cards.count();
     const addBtn = wrHeading.locator('xpath=..').getByRole('button');
     await addBtn.click();
 
@@ -18,6 +23,6 @@ test.describe('RMS-DASH-07: View This Week Reminder panel', () => {
 
     await page.getByRole('tree').getByRole('button', { name: 'Dashboard' }).click();
     await expect(page).toHaveURL(/\/admin\/dashboard/);
-    await expect(page.locator('app-reminder-report-card')).toHaveCount(1);
+    await expect(cards).toHaveCount(cardsBefore);
   });
 });

@@ -27,19 +27,15 @@ test.describe('A. Manage Candidates - List Page', () => {
     await expect(page.getByRole('heading', { name: 'Change Status' })).toBeVisible();
     await page.getByRole('button', { name: 'Confirm' }).click();
 
-    // KNOWN APP DEFECT (confirmed live, see defect-A5-status-change-to-passed-fails.png):
-    // Confirming still calls PATCH .../candidate/{id}/status/{statusId}, but for the PASSED
-    // status that call always returns HTTP 400 {"message":"Candidate not allowed to update"}
-    // - reproduced from NEW REQUEST directly, and again after progressing the same candidate
-    // through NEW REQUEST -> IN PROGRESS -> ATTENDED first, so it is not merely a workflow-order
-    // rule. The UI surfaces only a generic, non-actionable toast ("Unable to change candidate
-    // status. Please review the requirements and try again.") and the badge silently stays on
-    // its previous value - it never becomes visible as "PASSED", contradicting this scenario's
-    // spec expectation ("The badge updates immediately"). Other statuses (IN PROGRESS, ATTENDED,
-    // FAILED, CANCELED) were verified to apply successfully via this same dropdown+Confirm flow,
-    // so the defect is specific to transitioning to PASSED, not the inline-status feature as a
-    // whole. This assertion is intentionally left as the spec's correct expected behavior (not
-    // weakened to pass) so it keeps failing until the defect is fixed.
+    // PREVIOUSLY KNOWN APP DEFECT, NOW CONFIRMED FIXED (see defect-A5-status-change-to-passed-fails.png
+    // for the original evidence, and specs/candidate-list-exploratory-results.md for this
+    // session's re-check): confirming a PASSED transition used to make PATCH
+    // .../candidate/{id}/status/{statusId} always return HTTP 400 {"message":"Candidate not
+    // allowed to update"}, leaving the badge silently stuck on its previous value. Re-verified
+    // live this session (2026-09-22) with direct network inspection: the same PATCH call now
+    // returns HTTP 200 with candidateStatus.title "PASSED" in the response body, and the badge
+    // updates as expected. Left as a real (not weakened) assertion, since it now genuinely
+    // reflects the app's current, correct behavior rather than documenting a defect.
     await expect(row.getByText('PASSED')).toBeVisible();
 
     // 3. Reload the page - the change persisted server-side

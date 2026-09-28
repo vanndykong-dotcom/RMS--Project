@@ -3,12 +3,14 @@
 // fields render literally as "-", the ungraded Grade cell renders literally as "N/A".
 
 import { test, expect } from '@playwright/test';
-import { login, goToAdvanceReport } from '../helpers/candidate-helpers';
+import { login, goToAdvanceReport, setAdvanceReportDateRange, ADVANCE_REPORT_SEED_WEEK } from '../helpers/candidate-helpers';
 
 test.describe('RMS-RPT-01: View Following-Up Qualified Candidates report', () => {
   test('RPT01-2. Missing vs. ungraded value rendering conventions', async ({ page }) => {
     await login(page);
     await goToAdvanceReport(page);
+    // Seeded rows live in a fixed week, not the current-week default (see ADVANCE_REPORT_SEED_WEEK).
+    await setAdvanceReportDateRange(page, ADVANCE_REPORT_SEED_WEEK);
 
     const row = page.getByRole('row', { name: /Vannyda PICH/i });
     await expect(row).toBeVisible();

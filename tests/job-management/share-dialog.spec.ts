@@ -7,12 +7,15 @@
 // attribute is sufficient.
 
 import { test, expect } from '@playwright/test';
-import { login, goToJobDescriptions, getJobRowByExactTitle, clickJobRowMenuItem } from '../helpers/candidate-helpers';
+import { login, goToJobDescriptions, getJobRowByExactTitle, clickJobRowMenuItem, readJobListRowCount } from '../helpers/candidate-helpers';
 
 test.describe('RMS-JOB-06: Row action menu - Modify, Delete, Share, Get file', () => {
   test('JOB06-4. Share opens a safe, read-only link dialog', async ({ page }) => {
     await login(page);
     await goToJobDescriptions(page);
+    // The real-row count drifts on this shared server (11 at planning, 10 on 2026-09-28 after
+    // two real rows were removed outside this suite) - compare against the count on load.
+    const initialRowCount = await readJobListRowCount(page);
 
     const row = getJobRowByExactTitle(page, 'QA Automation');
     await clickJobRowMenuItem(row, 'Share');
@@ -28,6 +31,6 @@ test.describe('RMS-JOB-06: Row action menu - Modify, Delete, Share, Get file', (
     await page.keyboard.press('Escape');
     await expect(dialog).not.toBeVisible();
     // Closing has no side effects - the underlying list is unchanged.
-    await expect(page.locator('table tbody tr')).toHaveCount(11);
+    await expect(page.locator('table tbody tr')).toHaveCount(initialRowCount);
   });
 });

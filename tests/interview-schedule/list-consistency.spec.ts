@@ -2,7 +2,7 @@
 // seed: tests/seed-candidate.spec.ts
 
 import { test, expect } from '@playwright/test';
-import { login, goToCandidateList, searchFor } from '../helpers/candidate-helpers';
+import { login, goToCandidateList, searchFor, goToCalendarMonth, CALENDAR_SEED_MONTH } from '../helpers/candidate-helpers';
 
 test.describe('D. Interview Schedule Module', () => {
   test('D1. Interview Schedule list reflects candidate interviews', async ({ page }) => {
@@ -18,6 +18,8 @@ test.describe('D. Interview Schedule Module', () => {
     await page.getByRole('tree').getByRole('button', { name: 'Interview Schedule' }).click();
     await expect(page).toHaveURL(/\/admin\/calendar/);
     await expect(page.getByRole('heading', { name: 'Manage Interview Schedule' })).toBeVisible();
+    // Fixture interviews live in a fixed month, not the current-month default (see CALENDAR_SEED_MONTH).
+    await goToCalendarMonth(page, CALENDAR_SEED_MONTH);
 
     // The candidate's position tag appears as a calendar entry in the visible month. Some
     // days render more events than fit visually (truncated/collapsed), so this checks DOM

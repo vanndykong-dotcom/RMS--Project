@@ -7,12 +7,15 @@
 // modify-entry-point.spec.ts, where goBack() is unsafe).
 
 import { test, expect } from '@playwright/test';
-import { login, goToJobDescriptions } from '../helpers/candidate-helpers';
+import { login, goToJobDescriptions, readJobListRowCount } from '../helpers/candidate-helpers';
 
 test.describe('RMS-JOB-03: Add a new job description (entry point only)', () => {
   test('JOB03-1. "+ Add" button opens the creation page', async ({ page }) => {
     await login(page);
     await goToJobDescriptions(page);
+    // The real-row count drifts on this shared server (11 at planning, 10 on 2026-09-28) -
+    // compare against the count on load rather than a hardcoded snapshot.
+    const initialRowCount = await readJobListRowCount(page);
 
     const addButton = page.getByRole('button', { name: 'Add' });
     await expect(addButton).toBeVisible();
@@ -28,7 +31,7 @@ test.describe('RMS-JOB-03: Add a new job description (entry point only)', () => 
 
     await page.goBack();
     await expect(page).toHaveURL(/\/admin\/setting\/job$/);
-    await expect(page.locator('table tbody tr')).toHaveCount(11);
-    await expect(page.getByText(/^Total:\s*11$/)).toBeVisible();
+    await expect(page.locator('table tbody tr')).toHaveCount(initialRowCount);
+    await expect(page.getByText(new RegExp(`^Total:\\s*${initialRowCount}$`))).toBeVisible();
   });
 });

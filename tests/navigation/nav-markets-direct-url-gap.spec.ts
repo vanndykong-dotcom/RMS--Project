@@ -16,10 +16,10 @@ test.describe('AC2 - Navigation', () => {
   test('KNOWN GAP: direct navigation to the /markets URL does not resolve to a Markets section', async ({ page }) => {
     // 1. Precondition: start already logged in as a valid user, currently on the Dashboard. First confirm there is no 'Markets' item anywhere in the left sidebar navigation tree
     await page.goto('https://rms-dev.allweb.com.kh/welcome');
-    await page.getByRole('textbox', { name: 'Enter Username' }).fill(process.env.FAPA_EMAIL as string);
-    await page.getByRole('textbox', { name: 'Enter Password' }).fill(process.env.FAPA_PASSWORD as string);
+    await page.getByRole('textbox', { name: 'Enter Username' }).fill(process.env.RMS_EMAIL as string);
+    await page.getByRole('textbox', { name: 'Enter Password' }).fill(process.env.RMS_PASSWORD as string);
     await page.getByRole('button', { name: 'Login' }).click();
-    await expect(page).toHaveURL(/\/admin\/dashboard/);
+    await expect(page).toHaveURL(/\/admin\/dashboard/, { timeout: 20_000 });
     const sidebarTree = page.getByRole('tree');
     await expect(sidebarTree).toBeVisible();
     await expect(sidebarTree.getByRole('button', { name: 'Markets' })).toHaveCount(0);

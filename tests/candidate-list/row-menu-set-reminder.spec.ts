@@ -22,7 +22,12 @@ test.describe('A. Manage Candidates - List Page', () => {
     // Date & time. Can't be current time") - a future date must be explicitly picked first,
     // same underlying requirement as Set Interview (see pickFutureCalendarDate).
     await pickFutureCalendarDate(page);
-    await page.getByRole('textbox', { name: 'title' }).fill('QA E2E automated reminder test');
+    // A per-run unique token is appended so this row can never collide with a leftover
+    // reminder from a previous run of this same test - a literal, non-unique title here
+    // previously caused a "strict mode violation: resolved to 2 elements" failure once two
+    // runs' rows coexisted in the shared Reminder list (see report).
+    const reminderTitle = `QA E2E automated reminder test ${Date.now()}`;
+    await page.getByRole('textbox', { name: 'title' }).fill(reminderTitle);
     await page.getByRole('button', { name: 'Save' }).click();
     await ensureOnCandidateList(page);
 
@@ -34,7 +39,7 @@ test.describe('A. Manage Candidates - List Page', () => {
     // so waitForRowAfterWrite retries the search itself rather than a one-shot search + assert.
     await page.getByRole('tree').getByRole('button', { name: 'Reminder' }).click();
     await expect(page).toHaveURL(/\/admin\/reminders/);
-    const reminderRow = await waitForRowAfterWrite(page, /QA E2E automated reminder test/, 'QA E2E automated reminder test');
+    const reminderRow = await waitForRowAfterWrite(page, new RegExp(reminderTitle), reminderTitle);
     await expect(reminderRow.getByRole('link', { name })).toBeVisible();
 
     // cleanup

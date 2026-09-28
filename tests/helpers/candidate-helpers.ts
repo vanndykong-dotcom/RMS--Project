@@ -4,10 +4,14 @@ const BASE_URL = 'https://rms-dev.allweb.com.kh';
 
 export async function login(page: Page) {
   await page.goto(`${BASE_URL}/welcome`);
-  await page.getByRole('textbox', { name: 'Enter Username' }).fill(process.env.FAPA_EMAIL as string);
-  await page.getByRole('textbox', { name: 'Enter Password' }).fill(process.env.FAPA_PASSWORD as string);
+  await page.getByRole('textbox', { name: 'Enter Username' }).fill(process.env.RMS_EMAIL as string);
+  await page.getByRole('textbox', { name: 'Enter Password' }).fill(process.env.RMS_PASSWORD as string);
   await page.getByRole('button', { name: 'Login' }).click();
-  await expect(page).toHaveURL(/\/admin\/dashboard/);
+  // The Login click round-trips through Keycloak (:8070 openid-connect/auth) before landing on
+  // the dashboard. Under 3 concurrent workers that redirect alone was measured at up to ~8s on
+  // the shared dev server (2026-09-28), so the default 5s expect timeout failed 32 tests at this
+  // line with the page still mid-redirect - not a real login failure (see report).
+  await expect(page).toHaveURL(/\/admin\/dashboard/, { timeout: 20_000 });
 }
 
 export async function goToCandidateList(page: Page) {
@@ -22,10 +26,83 @@ export async function goToInterviewSchedule(page: Page) {
   await expect(page.getByRole('heading', { name: 'Manage Interview Schedule' })).toBeVisible();
 }
 
+/**
+ * The month the Interview Schedule suite's fixture interviews live in (e.g. Miss. Chhan DONG
+ * 05/Aug/2026 11:25 AM, Vanndy VK 05/Aug/2026 10:40 PM). The calendar opens on the CURRENT
+ * month, so specs written in August silently lost their fixtures once it rolled over - on
+ * 2026-09-28 September holds 7 unrelated events and no "Chhan". Same class of bug as
+ * ADVANCE_REPORT_SEED_WEEK below.
+ */
+export const CALENDAR_SEED_MONTH = new Date(2026, 7, 1);
+
+/** Moves the Interview Schedule calendar to the month containing `target` via prev/next. */
+export async function goToCalendarMonth(page: Page, target: Date) {
+  const title = page.locator('.fc-toolbar-title');
+  const wanted = target.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+  for (let i = 0; i < 36; i += 1) {
+    const current = (await title.innerText()).trim();
+    if (current === wanted) break;
+    const currentDate = new Date(`1 ${current}`);
+    const direction = currentDate > target ? 'prev' : 'next';
+    await page.locator(`button[aria-label="${direction}"]`).click();
+    await expect(title).not.toHaveText(current);
+  }
+  await expect(title).toHaveText(wanted);
+  // Events for the new month load asynchronously after the title changes
+  await expect(page.locator('.custom-calendar-event').first()).toBeVisible();
+}
+
 export async function goToAdvanceReport(page: Page) {
   await page.getByRole('tree').getByRole('button', { name: 'Advance Report' }).click();
   await expect(page).toHaveURL(/\/admin\/candidate\/advance-report/);
   await expect(page.getByRole('heading', { name: 'Manage Candidates Advance Report' })).toBeVisible();
+}
+
+/**
+ * The week the Advance Report suite's fixture data lives in. The report's date range defaults to
+ * the CURRENT Mon-Fri week, so specs that relied on that default (written the week of 24 Aug
+ * 2026, when "Miss. Vannyda PICH" was the one seeded Following-Up row in range) silently broke
+ * once the calendar moved on - on 2026-09-28 the default week 28 Sep - 2 Oct is empty ("Total:
+ * 0"). Same class of bug as the hardcoded calendar date fixed in pickFutureCalendarDate(). Specs
+ * that assert on seeded rows pin this window explicitly instead of trusting "today".
+ */
+export const ADVANCE_REPORT_SEED_WEEK = { start: new Date(2026, 7, 24), end: new Date(2026, 7, 28) };
+
+/**
+ * Sets the Advance Report date range via the pill's inline calendar (month label
+ * `label.header-label` e.g. "AUG 2026", day cells named e.g. "August 24, 2026"), clicks
+ * Generate, and waits for the banner to show the new window.
+ */
+export async function setAdvanceReportDateRange(page: Page, range: { start: Date; end: Date }) {
+  const { start, end } = range;
+  await page.getByText(/[A-Za-z]{3}\s+\d{1,2}.+[A-Za-z]{3}\s+\d{1,2}/).first().click();
+
+  // Two label.header-label elements render in the panel ("Calender" and e.g. "SEP 2026") -
+  // match the month one by its text shape.
+  const monthLabel = page.locator('.cdk-overlay-pane label.header-label').filter({ hasText: /^\s*[A-Z]{3} \d{4}\s*$/ });
+  const target = `${start.toLocaleString('en-US', { month: 'short' }).toUpperCase()} ${start.getFullYear()}`;
+  const monthIndex = (label: string) => {
+    const [mon, year] = label.trim().split(' ');
+    return Number(year) * 12 + new Date(`${mon} 1, 2000`).getMonth();
+  };
+  // Calendar chevrons are mat-icons, not buttons - dispatchEvent for the same reason as
+  // date-range-no-results.spec.ts (the calendar's hover layer intercepts plain clicks).
+  for (let i = 0; i < 36; i += 1) {
+    const current = (await monthLabel.innerText()).trim();
+    if (current === target) break;
+    const direction = monthIndex(current) > monthIndex(target) ? 'keyboard_arrow_left' : 'keyboard_arrow_right';
+    await page.locator('mat-icon.arrow', { hasText: direction }).dispatchEvent('click');
+    await expect(monthLabel).not.toHaveText(current);
+  }
+
+  const cellName = (d: Date) => `${d.toLocaleString('en-US', { month: 'long' })} ${d.getDate()}, ${d.getFullYear()}`;
+  await page.getByRole('gridcell', { name: cellName(start), exact: true }).click();
+  await page.getByRole('gridcell', { name: cellName(end), exact: true }).click();
+  await page.getByRole('button', { name: 'Generate' }).click();
+
+  const bannerDate = (d: Date) => `${d.getDate()} ${d.toLocaleString('en-US', { month: 'short' })} ${d.getFullYear()}`;
+  await expect(page.getByText(`(${bannerDate(start)} - ${bannerDate(end)})`).first()).toBeVisible();
+  await page.locator('.cdk-overlay-backdrop').first().waitFor({ state: 'detached', timeout: 5000 }).catch(() => {});
 }
 
 /**
@@ -70,7 +147,13 @@ export async function createSyntheticCandidate(page: Page, opts: { lastNameSuffi
   await page.getByRole('textbox', { name: 'Last name' }).fill(`Candidate ${uniqueLastName}`);
 
   await page.getByRole('textbox', { name: 'N/A' }).click();
-  await page.getByRole('gridcell', { name: 'August 1,' }).first().click();
+  // The DOB calendar opens defaulted to (current month/year minus 18 years), not a fixed
+  // month - a previous version of this hardcoded "August 1," (valid when this was first
+  // automated in August), which silently broke once the current month rolled to September
+  // (calendar then defaults to "SEP <year>", so no "August 1," cell exists without navigating
+  // - see report). Matching day "1" of whatever month the calendar actually opens on avoids
+  // re-breaking every time the month changes, since any valid past DOB works here.
+  await page.getByRole('gridcell', { name: /^\w+ 1,/ }).first().click();
   await page.getByRole('button', { name: 'Apply' }).click();
 
   await page.locator('app-aw-input-box-multiple').getByRole('textbox').fill('012 345 678');
@@ -142,7 +225,10 @@ export async function ensureOnCandidateList(page: Page) {
   if (!/\/admin\/candidate$/.test(page.url())) {
     await page.goto(`${BASE_URL}/admin/candidate`);
   }
-  await expect(page.getByRole('heading', { name: 'Manage Candidates' })).toBeVisible();
+  // A full page.goto re-bootstraps the SPA, including the same Keycloak SSO round trip that
+  // login() allows 20s for - the default 5s failed A10/C1 here on 2026-09-28 with the page
+  // still blank (see report).
+  await expect(page.getByRole('heading', { name: 'Manage Candidates' })).toBeVisible({ timeout: 20_000 });
 }
 
 /**
@@ -287,9 +373,48 @@ export async function clickRowMenuItem(page: Page, rowName: RegExp | string, ite
   }
 }
 
-export async function archiveCandidateFromActiveList(page: Page, rowName: RegExp | string) {
-  await clickRowMenuItem(page, rowName, 'Add to archive');
-  await page.getByRole('button', { name: 'Confirm' }).click();
+/**
+ * Archives a candidate via its own row menu, then VERIFIES the archive actually took effect
+ * before returning, retrying the whole click+confirm sequence if not.
+ *
+ * A previous version of this helper fired the click+confirm sequence once and trusted it (no
+ * verification) - under this suite's own heavier/concurrent runs, that reliably left synthetic
+ * candidates un-archived on the shared live list even when the calling test itself reported a
+ * pass (the click sequence can resolve without the archive having actually completed server-side,
+ * likely a UI/backend race under load - see report). Every caller of this helper implicitly
+ * relies on cleanup actually happening, so the verification belongs here once, not duplicated
+ * per test. On a genuine failure to verify after retrying, this throws rather than silently
+ * leaving the record un-archived and reporting success.
+ */
+export async function archiveCandidateFromActiveList(page: Page, rowName: RegExp | string, attempts = 3) {
+  // The active list doesn't reliably self-refresh its rendered rows right after the Confirm
+  // click (the existing row-menu-archive.spec.ts flow re-issues its own search afterward for the
+  // same reason) - checking visibility without first re-querying the same filter term can read a
+  // stale DOM and falsely conclude the archive didn't take effect. Re-searching by the row's own
+  // term (its regex source, or the string itself) forces a fresh query before verifying.
+  //
+  // Healed 2026-09-28: re-searching must CLEAR the box first. Filling the search box with the
+  // term it already holds fires no new request (no value change), so the old check re-read the
+  // same stale rows every attempt and "retried" the archive on an already-archived record -
+  // failing E2/A9/CAL05-3 cleanup with the record in fact archived. The list also lags a few
+  // seconds after a write (confirmed live: a just-restored record searched as Total: 0, then
+  // Total: 1 seconds later), so poll for the row to disappear before retrying the click.
+  const searchTerm = typeof rowName === 'string' ? rowName : rowName.source;
+  const row = page.getByRole('row', { name: rowName });
+  const searchBox = page.locator('app-aw-layout-list').getByRole('textbox', { name: 'Search' });
+  const goneAfterFreshSearch = async () => {
+    if (await searchBox.inputValue()) await searchFor(page, '');
+    await searchFor(page, searchTerm);
+    return !(await row.isVisible().catch(() => false));
+  };
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    await clickRowMenuItem(page, rowName, 'Add to archive');
+    await page.getByRole('button', { name: 'Confirm' }).click();
+    const gone = await expect.poll(goneAfterFreshSearch, { timeout: 15_000, intervals: [1000, 2000, 3000] })
+      .toBe(true).then(() => true, () => false);
+    if (gone) return;
+  }
+  throw new Error(`archiveCandidateFromActiveList: row still visible in the active list after ${attempts} attempts`);
 }
 
 /**
@@ -301,6 +426,22 @@ export async function archiveCandidateFromActiveList(page: Page, rowName: RegExp
  * re-triggers a Keycloak silent-SSO check that this client isn't configured for, bouncing to
  * /welcome?error=unauthorized_client... even with a valid session.
  */
+/**
+ * Returns the job description list's row count once the real rows have rendered. The table
+ * briefly shows a single placeholder <tr> right after navigation, so a bare `.count()` can read
+ * 1 - wait for the rendered rows to match the "Total: N" footer first (single-page dataset).
+ * Specs compare against this instead of a hardcoded count: the shared server's real rows drift
+ * (11 at planning, 10 on 2026-09-28).
+ */
+export async function readJobListRowCount(page: Page): Promise<number> {
+  const totalText = page.getByText(/^Total:\s*\d+$/);
+  await expect(totalText).toBeVisible();
+  const rows = page.locator('table tbody tr');
+  await expect.poll(async () => (await rows.count()) === Number((await totalText.innerText()).replace(/\D/g, '')))
+    .toBe(true);
+  return rows.count();
+}
+
 export async function goToJobDescriptions(page: Page) {
   const sidebarTree = page.getByRole('tree');
   const jobButton = sidebarTree.getByRole('button', { name: 'Job' });
@@ -551,7 +692,11 @@ export async function getFileManagerItemCount(fileManager: Locator): Promise<num
   // `<span class="elfinder-stat-size elfinder-stat-size-recursive">Sum: {size}</span>` (no
   // "Items:" prefix, no title attribute) that only appears once a folder is selected.
   // Exclude the recursive span so this always resolves to the one real title-bearing div.
-  const title = await fileManager.locator('.elfinder-stat-size:not(.elfinder-stat-size-recursive)').getAttribute('title');
+  const stat = fileManager.locator('.elfinder-stat-size:not(.elfinder-stat-size-recursive)');
+  // elFinder fills this title in only after its folder listing loads - under concurrent load a
+  // bare getAttribute() read it before then and returned NaN (CAND04-2, 2026-09-28).
+  await expect(stat).toHaveAttribute('title', /Items:\s*\d+/, { timeout: 15_000 });
+  const title = await stat.getAttribute('title');
   const match = title?.match(/Items:\s*(\d+)/);
   return match ? Number(match[1]) : NaN;
 }

@@ -3,12 +3,14 @@
 // safety: only Close is clicked here, never Edit-then-save.
 
 import { test, expect } from '@playwright/test';
-import { login, goToInterviewSchedule } from '../helpers/candidate-helpers';
+import { login, goToInterviewSchedule, goToCalendarMonth, CALENDAR_SEED_MONTH } from '../helpers/candidate-helpers';
 
 test.describe('RMS-CAL-06: Interview status at a glance', () => {
   test('CAL06-2. Clicking a pill opens a detail dialog', async ({ page }) => {
     await login(page);
     await goToInterviewSchedule(page);
+    // Fixture interviews live in a fixed month, not the current-month default (see CALENDAR_SEED_MONTH).
+    await goToCalendarMonth(page, CALENDAR_SEED_MONTH);
 
     // The pill's own .event-title collapses to 0px width for long status text (documented
     // defect in reschedule-cancel.spec.ts) - click the whole event wrapper, not its title text.

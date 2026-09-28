@@ -70,12 +70,12 @@ test.describe.serial('Performance - Page Load Timing', () => {
   });
 
   test('Login submit -> Dashboard render timing', async () => {
-    await page.getByRole('textbox', { name: 'Enter Username' }).fill(process.env.FAPA_EMAIL as string);
-    await page.getByRole('textbox', { name: 'Enter Password' }).fill(process.env.FAPA_PASSWORD as string);
+    await page.getByRole('textbox', { name: 'Enter Username' }).fill(process.env.RMS_EMAIL as string);
+    await page.getByRole('textbox', { name: 'Enter Password' }).fill(process.env.RMS_PASSWORD as string);
 
     const start = Date.now();
     await page.getByRole('button', { name: 'Login' }).click();
-    await expect(page).toHaveURL(/\/admin\/dashboard/);
+    await expect(page).toHaveURL(/\/admin\/dashboard/, { timeout: 20_000 });
     await expect(page.getByRole('heading', { name: 'Dashboard', level: 1 })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Quick Access' })).toBeVisible();
     const elapsed = Date.now() - start;
