@@ -11,7 +11,7 @@ success, so **no new `goToDashboard()` helper is needed**: landing there is a si
 `login()` itself, confirmed live this session).
 
 This plan covers all 8 acceptance-criteria groups of the Dashboard epic
-(`user-stories/scrum_RMS-Dashboard.md`, RMS-DASH-01..08), refined against live exploration
+(`user-stories/scrum-dashboard.md`, RMS-DASH-01..08), refined against live exploration
 findings from 2026-09-21. **This epic is read-only observation only** — no "+ Add"/"+
 Interview"/"+ Candidate"/"+ Reminder" form is ever submitted, and "Archive" is only exercised
 because it was confirmed live to be a safe, reversible, non-destructive in-place view toggle (see
@@ -129,7 +129,7 @@ there (never copied into the repo — confirmed via `git status` at the end of t
   full page, `/admin/reminders/add?type=INTERVIEW` (unlike "+ Interview", this is a page, not a
   dialog).
 - **New finding, out of the story's stated scope**: below "Top Candidates" the live page also
-  renders two more sections not mentioned anywhere in `user-stories/scrum_RMS-Dashboard.md`: a
+  renders two more sections not mentioned anywhere in `user-stories/scrum-dashboard.md`: a
   "Candidate" section (`app-dashboard-candidate-graph`, two Chart.js canvases) and an
   "Interviews" section (`app-dashboard-interview-graph`, one Chart.js canvas). These are real,
   visible parts of the live Dashboard page. Since they're outside the story's 8 documented

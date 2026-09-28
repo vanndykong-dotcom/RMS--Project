@@ -47,7 +47,7 @@ GET https://rms-dev.allweb.com.kh:8908/rms-service/api/v1/jobDescription?pageSiz
 ```
 This is a server-side response difference (identical request shape, only the `filter` value's case differs), ruling out any client-side rendering/timing artifact. **Verdict: CONFIRMED BUG**, unchanged from the planning step's finding, now with one more term pair and raw response bodies as evidence.
 
-Evidence screenshot: `defect-JOB02-3-case-sensitive-search-QA-zero-matches.png` (repo root) — list showing "No matching records found" / "Total: 0" with "QA" typed in the search box.
+Evidence screenshot: `test-reports/evidence/defect-JOB02-3-case-sensitive-search-QA-zero-matches.png` — list showing "No matching records found" / "Total: 0" with "QA" typed in the search box.
 
 A secondary, incidental confirmation: the synthetic row created for RMS-JOB-04.2 (titled `QA Automation Toggle Test {timestamp}`) could **not** be found by searching its own exact-case title — the same defect blocked the lookup, and the row had to be located structurally (row 0, newest-first sort) instead. See Insight #5.
 
@@ -65,7 +65,7 @@ The literally identical text for a 5-day-old row and a 16-month-old row is stron
 
 **Verdict: CONFIRMED BUG**, upgraded from "suspected" to "reproducible across 3 widely-spaced samples in one session."
 
-Evidence screenshot: `defect-JOB05-2-relative-time-over-1-year-ago.png` (repo root) — eye-icon dialog for "QA Automation" showing "Created: over 1 year ago" directly below the row's own 5-day-old timestamp context.
+Evidence screenshot: `test-reports/evidence/defect-JOB05-2-relative-time-over-1-year-ago.png` — eye-icon dialog for "QA Automation" showing "Created: over 1 year ago" directly below the row's own 5-day-old timestamp context.
 
 ## Scenario-by-scenario results
 
@@ -125,6 +125,6 @@ The plan's own open item asked whether Modify opens a modal or a dedicated page.
 ## Cleanup confirmation
 
 - All throwaway Node scripts used this session live only in the session's scratch temp directory; none were copied into the repo. `git status` after this session shows no stray automation scripts in the repo.
-- Two evidence screenshots were added to the repo root, following the existing `defect-<id>-<short-desc>.png` convention: `defect-JOB02-3-case-sensitive-search-QA-zero-matches.png` and `defect-JOB05-2-relative-time-over-1-year-ago.png`.
+- Two evidence screenshots were added to the repo root, following the existing `defect-<id>-<short-desc>.png` convention: `test-reports/evidence/defect-JOB02-3-case-sensitive-search-QA-zero-matches.png` and `test-reports/evidence/defect-JOB05-2-relative-time-over-1-year-ago.png`.
 - The synthetic job description (`QA Automation Toggle Test {timestamp}`) created for RMS-JOB-04.2 was fully deleted (Delete → Confirm) as its own cleanup step; the list is verified back at exactly 11 rows.
 - The real "QA Automation" row (and all other 10 real rows) were only ever opened/viewed/cancelled-out-of (eye icon, Modify-then-Escape, Delete-then-Cancel, Share, Get file) — no Status toggle, no Confirm-delete, no Modify-save, and no Share/send action was ever performed against any of the 11 real rows. Final state re-verified: 11 rows, `Total: 11`, row 0 = "QA Automation" (19/Aug/2026 01:21 PM), toggle `checked: true` — identical to the state at the start of this session.

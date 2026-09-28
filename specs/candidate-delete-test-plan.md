@@ -24,7 +24,7 @@ duplicated here; see the coverage map below. This plan focuses on what changed: 
 - Clicking **Delete** in the Archive view opens a dialog titled "Delete Candidate" with body
   text "Are you sure you want to delete this candidate?" and a note: "Data associated with
   [candidate name] will be permanently deleted." — see
-  `test-results/evidence/archive-delete-confirmation-dialog.png`.
+  `test-reports/evidence/archive-delete-confirmation-dialog.png`.
 - **This resolves the story's open question**: Delete is a **hard/permanent delete**, not a
   soft delete (unlike Archive, which is recoverable via Restore in the same menu).
 - **Safety constraint for this test suite**: because deletion is permanent and this

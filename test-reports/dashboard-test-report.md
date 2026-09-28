@@ -1,6 +1,6 @@
 # Test Execution Report: Dashboard / Home (RMS-DASH)
 
-**User story:** `user-stories/scrum_RMS-Dashboard.md`
+**User story:** `user-stories/scrum-dashboard.md`
 **Test plan:** `specs/dashboard-test-plan.md`
 **Exploratory results:** `specs/dashboard-exploratory-results.md`
 **Environment:** https://rms-dev.allweb.com.kh/admin/dashboard, real, production-like data
@@ -213,7 +213,7 @@ would likely eliminate it, but that decision affects every spec in this repo, no
 and was left out of scope here.
 
 Next steps: (1) fix D1 (tooltip sign) and get a product decision on D2 (duplicate interviewer);
-(2) update `user-stories/scrum_RMS-Dashboard.md` itself to reflect the three story corrections
+(2) update `user-stories/scrum-dashboard.md` itself to reflect the three story corrections
 found (Quick Access card color, reminder link vs. plain text, reminder click destination), so the
 next person reading it isn't misled; (3) consider a small, cross-cutting `login()` retry-once
 wrapper in `tests/helpers/candidate-helpers.ts` if this Keycloak-concurrency flake becomes a

@@ -1,6 +1,6 @@
 # Test Execution Report: Manage Candidates Advance Report (RMS-RPT)
 
-**User story:** `user-stories/scrum_AdvanceReport.md`
+**User story:** `user-stories/scrum-advance-report.md`
 **Test plan:** `specs/advance-report-test-plan.md`
 **Exploratory results:** `specs/advance-report-exploratory-results.md`
 **Environment:** https://rms-dev.allweb.com.kh/admin/candidate/advance-report (real, production-like data)
@@ -56,10 +56,10 @@ Key findings, resolving the story's open questions:
    score, for every row, including one (Raksa CHANN) whose real composite score (`OVERALL: 83.5%`)
    is visible and correct inside her own profile modal — confirming the report column is
    mislabeled/mis-bound, not that the data doesn't exist. Screenshot:
-   `defect-RPT01-composite-score-column-shows-interview-date.png`.
+   `test-reports/evidence/defect-RPT01-composite-score-column-shows-interview-date.png`.
 7. **Defect found**: the Following Up tab's Remark column never renders text (only ever blank),
    while Summary Full Staff's Remark column correctly shows text (e.g. "Passed.") for the same
-   candidate. Screenshot: `defect-RPT08-remark-column-blank-only-on-following-up-tab.png`.
+   candidate. Screenshot: `test-reports/evidence/defect-RPT08-remark-column-blank-only-on-following-up-tab.png`.
 8. Confirmed fully read-only: no write-capable action exists anywhere on this screen besides the
    client-side Excel export.
 
@@ -111,7 +111,7 @@ test-side selector/wait/assertion correction.
   one candidate whose real composite score is visible and correct elsewhere in the app.
 - **Impact:** The report's headline scoring column is unusable for its stated purpose (deciding
   who needs follow-up action based on their composite score).
-- **Evidence:** `defect-RPT01-composite-score-column-shows-interview-date.png`.
+- **Evidence:** `test-reports/evidence/defect-RPT01-composite-score-column-shows-interview-date.png`.
 - **Suggested fix:** the column is very likely bound to the wrong backend field (interview
   date/time instead of the composite score field) — a data-binding fix, not a missing-feature
   gap.
@@ -128,7 +128,7 @@ test-side selector/wait/assertion correction.
   correctly shows text (e.g. "Passed.") for the same candidate.
 - **Impact:** Recruiters using the Following Up tab (the report's default/primary view) lose
   visibility into remark content that is available elsewhere in the same report.
-- **Evidence:** `defect-RPT08-remark-column-blank-only-on-following-up-tab.png`.
+- **Evidence:** `test-reports/evidence/defect-RPT08-remark-column-blank-only-on-following-up-tab.png`.
 
 ## 5. Test Coverage Analysis
 

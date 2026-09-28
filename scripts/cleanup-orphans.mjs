@@ -10,8 +10,8 @@ const TERMS = ['Candidate B2', 'Candidate A13', 'Candidate A9', 'Candidate E2', 
   const browser = await chromium.launch();
   const page = await browser.newPage();
   await page.goto(`${BASE_URL}/welcome`);
-  await page.getByRole('textbox', { name: 'Enter Username' }).fill(process.env.FAPA_EMAIL);
-  await page.getByRole('textbox', { name: 'Enter Password' }).fill(process.env.FAPA_PASSWORD);
+  await page.getByRole('textbox', { name: 'Enter Username' }).fill(process.env.RMS_EMAIL);
+  await page.getByRole('textbox', { name: 'Enter Password' }).fill(process.env.RMS_PASSWORD);
   await page.getByRole('button', { name: 'Login' }).click();
   await page.waitForURL(/\/admin\/dashboard/);
   await page.getByRole('tree').getByRole('button', { name: 'Candidate' }).click();

@@ -130,5 +130,5 @@ utilities (committed 2026-08-11) were reused as-is and left in place.
 - `tests/candidate-list/row-menu-set-interview.spec.ts` (A10 - dynamic date)
 - `tests/candidate-list/row-menu-set-reminder.spec.ts` (A9 - actual fix, not just re-flagged)
 - `tests/interview-schedule/reschedule-cancel.spec.ts` (D2 - dynamic date)
-- `defect-A13-archive-search-ignores-lastname.png`, `defect-D2-calendar-event-title-zero-width.png` (evidence screenshots refreshed by this session's runs)
+- `test-reports/evidence/defect-A13-archive-search-ignores-lastname.png`, `test-reports/evidence/defect-D2-calendar-event-title-zero-width.png` (evidence screenshots refreshed by this session's runs)
 - `test-reports/incremental-rerun-2026-08-24.md` (this report)

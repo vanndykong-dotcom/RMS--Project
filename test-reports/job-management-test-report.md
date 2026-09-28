@@ -1,6 +1,6 @@
 # Test Execution Report: Manage Job Description (RMS-JOB)
 
-**User story:** `user-stories/scrum_JobManagement.md`
+**User story:** `user-stories/scrum-job-management.md`
 **Test plan:** `specs/job-management-test-plan.md`
 **Exploratory results:** `specs/job-management-exploratory-results.md`
 **Environment:** https://rms-dev.allweb.com.kh (Setting > Job), real, production-like data
@@ -81,11 +81,11 @@ Key findings:
    `GET .../jobDescription?...&filter=<exact-case-term>` returns `total: 0` for terms like "Java",
    "QA", "Automation", "Intern" typed in their real display case, while the identical lowercase
    term returns the correct count. Verified across 4 term pairs. Screenshot:
-   `defect-JOB02-3-case-sensitive-search-QA-zero-matches.png`.
+   `test-reports/evidence/defect-JOB02-3-case-sensitive-search-QA-zero-matches.png`.
 3. **Defect found and confirmed across 3 rows of very different real ages**: the relative-time
    display ("Created ... ago" / "Updated ... ago") shows the identical "over 1 year ago" for
    records ranging from ~5 days old to ~16 months old — reproducible, not a one-row misread.
-   Screenshot: `defect-JOB05-2-relative-time-over-1-year-ago.png`.
+   Screenshot: `test-reports/evidence/defect-JOB05-2-relative-time-over-1-year-ago.png`.
 4. **Share and Get file confirmed safe**: Share opens a read-only dialog with a copyable internal
    apply-link (no external send is triggered); Get file downloads a real PDF (UUID-named).
 5. Eye icon and Modify both open **in-place dialogs** (URL unchanged) — `app-dialog-view-job` for
@@ -149,7 +149,7 @@ synthetic test fixtures.
   the app.
 - **Actual:** `GET .../jobDescription?...&filter=<exact-case>` returns `total: 0`; the identical
   term in lowercase returns the correct count. Verified across 4 term pairs.
-- **Evidence:** `defect-JOB02-3-case-sensitive-search-QA-zero-matches.png`.
+- **Evidence:** `test-reports/evidence/defect-JOB02-3-case-sensitive-search-QA-zero-matches.png`.
 - **Suggested fix:** apply a case-insensitive comparison (e.g. `ILIKE`/lowercased comparison) on
   the backend filter, matching the pattern already used for candidates.
 
@@ -162,7 +162,7 @@ synthetic test fixtures.
 - **Actual:** both show the identical "over 1 year ago" — reproducible across 3 rows of very
   different real ages, pointing to a hardcoded string or broken duration calculation rather than
   imprecision.
-- **Evidence:** `defect-JOB05-2-relative-time-over-1-year-ago.png`.
+- **Evidence:** `test-reports/evidence/defect-JOB05-2-relative-time-over-1-year-ago.png`.
 
 ### D3 — Data-loss incident (see dedicated section above) — process/tooling risk, not an app defect
 

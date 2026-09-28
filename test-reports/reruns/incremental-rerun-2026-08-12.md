@@ -69,7 +69,7 @@ including all 11 new performance sub-tests.
 
 This test deliberately asserts a **pre-existing, already-documented app defect**: the
 Archive view's search endpoint does not filter on Last Name (see the test's own inline
-comment and `defect-A13-archive-search-ignores-lastname.png`, both already present before
+comment and `test-reports/evidence/defect-A13-archive-search-ignores-lastname.png`, both already present before
 this re-run). The test intentionally documents the currently-failing behavior instead of
 masking it with a workaround selector. No healing applied - re-running unhealed and
 re-flagging is the correct behavior until the underlying API is fixed.

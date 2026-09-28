@@ -4,7 +4,7 @@
 
 Application under test: ALLWEB Recruitment Management System (RMS) Interview Schedule / Calendar module at https://rms-dev.allweb.com.kh/admin/calendar (real, production-like data — 30 event pills observed across August 2026 at time of planning). Login via /welcome using FAPA_EMAIL/FAPA_PASSWORD from .env (reuse `login()` from `tests/helpers/candidate-helpers.ts`), then click 'Interview Schedule' in the left sidebar tree (`page.getByRole('tree').getByRole('button', { name: 'Interview Schedule' })`) to land on `/admin/calendar`.
 
-This plan covers all 7 acceptance criteria groups of the "Manage Interview Schedule" epic (user-stories/scrum_InterviewSchedule.md, RMS-CAL-01..07), refined against live exploration findings from 2026-08-24:
+This plan covers all 7 acceptance criteria groups of the "Manage Interview Schedule" epic (user-stories/scrum-interview-schedule.md, RMS-CAL-01..07), refined against live exploration findings from 2026-08-24:
 
 - **Breadcrumb confirmed exactly as specified**: `[class*="bread"]` element renders "Dashboard > Calendar > List calendar" (verified via live DOM read). Page heading is `role=heading name="Manage Interview Schedule"`, with a second heading holding the period label (e.g. "August 2026").
 - **Toolbar buttons confirmed with exact accessible names**: `button[aria-label="prev"]` and `button[aria-label="next"]` (icon-only chevrons, no visible text), `button name="today"`, and three exact-match toggle buttons `button name="Day"`, `button name="Week"`, `button name="Month"`. The create entry point is `button name="Create Interview"` (icon "add" + text, top-right of the page header).

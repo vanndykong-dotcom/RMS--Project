@@ -42,7 +42,7 @@ Evidence (all three rows, same widened date range, one screenshot):
 
 **Verdict: CONFIRMED BUG.** The "Recruit + OM + HR + TL" column header is mislabeled/mis-bound — it renders the row's own Interview Date value, and no distinct composite score for Recruit/OM/HR/TL is ever shown in the report table itself (the closest equivalent, an "Overall"/"Average" percentage, only exists in the candidate profile modal, under different labels).
 
-Evidence screenshot: `defect-RPT01-composite-score-column-shows-interview-date.png` (repo root) — full-width capture of the Following Up Report table with all 3 rows visible, showing the yellow-highlighted "Recruit + OM + HR + TL" header directly above two timestamp values and one `-`.
+Evidence screenshot: `test-reports/evidence/defect-RPT01-composite-score-column-shows-interview-date.png` — full-width capture of the Following Up Report table with all 3 rows visible, showing the yellow-highlighted "Recruit + OM + HR + TL" header directly above two timestamp values and one `-`.
 
 ## Scenario-by-scenario results
 
@@ -78,7 +78,7 @@ Evidence screenshot: `defect-RPT01-composite-score-column-shows-interview-date.p
 ## Bugs / inconsistencies found
 
 ### Bug #1 (CONFIRMED, high severity) — "Recruit + OM + HR + TL" column shows the Interview Date, never a composite score
-See the dedicated section above. Confirmed across all 3 seeded Following-Up rows plus corroborating evidence from the candidate profile modal. Evidence: `defect-RPT01-composite-score-column-shows-interview-date.png`.
+See the dedicated section above. Confirmed across all 3 seeded Following-Up rows plus corroborating evidence from the candidate profile modal. Evidence: `test-reports/evidence/defect-RPT01-composite-score-column-shows-interview-date.png`.
 
 ### Bug #2 (OBSERVATION, not necessarily a defect) — Filter control disappears entirely on Summary tabs; search state is not shared across tabs
 - **Where:** Advance Report page, Filter button + report's own search box.
@@ -97,7 +97,7 @@ See the dedicated section above. Confirmed across all 3 seeded Following-Up rows
 - **Where:** Following Up Report tab vs. Summary Full Staff tab, both showing the same candidate (Vannyda PICH) in the same widened date range.
 - **Observed:** On the Following Up Report tab, "Remark" is only a banner label sitting above the unnamed eye-icon column — there is no distinct rendered Remark **text** column at all on that tab (confirmed via colspan inspection: the banner's "Remark" `colspan=1` cell sits directly above the blank header for the eye-icon column, not above any text cell). On the Summary Full Staff tab, "Remark" **is** a genuine 8th data column, and for the exact same candidate (Vannyda PICH, row 15 in the widened range) it correctly displays `Passed.` — the same text the eye-icon dialog's Description field shows.
 - **Assessment:** This is a more precise, confirmed version of the plan's open item #3. It is not that "Remark is blank until the eye icon is opened" in general — Summary Full Staff proves the underlying text is available and can render inline. It is specifically the **Following Up Report tab** that never surfaces it as text (only via the separate eye-icon dialog).
-- **Evidence:** `defect-RPT08-remark-column-blank-only-on-following-up-tab.png` (repo root) — Summary Full Staff tab, row 15, showing `Passed.` in the Remark column for the same candidate whose Following Up Report row has no visible Remark text anywhere in the table itself.
+- **Evidence:** `test-reports/evidence/defect-RPT08-remark-column-blank-only-on-following-up-tab.png` — Summary Full Staff tab, row 15, showing `Passed.` in the Remark column for the same candidate whose Following Up Report row has no visible Remark text anywhere in the table itself.
 
 ### Bug #5 (new this session, corrects RPT02-2 and explains the Full Staff pagination dataset) — the Summary Full Staff / Summary Intern date-range control does not actually re-query their data; each tab's date range is independent, and Full Staff's `Total: 16` appears to be date-range-independent entirely
 - **Where:** date-range pill/panel, compared across tabs.
@@ -132,5 +132,5 @@ See the dedicated section above. Confirmed across all 3 seeded Following-Up rows
 
 ## Cleanup confirmation
 
-No stray files were left in the repo. All throwaway Node scripts used during this exploration were written to and run from the session's scratch temp directory, never inside the repo, and were not copied in. Two evidence screenshots were added to the repo root following the existing `defect-<id>-<short-desc>.png` convention: `defect-RPT01-composite-score-column-shows-interview-date.png` (Bug #1) and `defect-RPT08-remark-column-blank-only-on-following-up-tab.png` (Bug #4). No synthetic candidates were created and no write/submit action was taken against real records — this module remained fully read-only throughout, consistent with the plan's own safety note.
+No stray files were left in the repo. All throwaway Node scripts used during this exploration were written to and run from the session's scratch temp directory, never inside the repo, and were not copied in. Two evidence screenshots were added to the repo root following the existing `defect-<id>-<short-desc>.png` convention: `test-reports/evidence/defect-RPT01-composite-score-column-shows-interview-date.png` (Bug #1) and `test-reports/evidence/defect-RPT08-remark-column-blank-only-on-following-up-tab.png` (Bug #4). No synthetic candidates were created and no write/submit action was taken against real records — this module remained fully read-only throughout, consistent with the plan's own safety note.
 

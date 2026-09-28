@@ -1,6 +1,6 @@
 # Test Execution Report: Candidate Details (RMS-CAND)
 
-**User story:** `user-stories/scrum_Candidate Details.md`
+**User story:** `user-stories/scrum-candidate-details.md`
 **Test plan:** `specs/candidate-details-test-plan.md`
 **Exploratory results:** `specs/candidate-details-exploratory-results.md`
 **Environment:** https://rms-dev.allweb.com.kh/admin/candidate/candidateDetail/{id} (real, production-like data)
@@ -37,13 +37,13 @@ Confirmed findings carried into this run's automated regression suite:
 1. **Status badge color is hardcoded**, not derived from the status value — FOLLOWING UP, NEW
    REQUEST, IN PROGRESS, and PASSED all render identical `class="following"`,
    `background-color: rgb(253, 244, 219)`, `color: rgb(255, 153, 0)`. Confirmed across 5 data
-   points over two sessions. See `defect-CAND01-2-status-badge-color-passed.png`.
+   points over two sessions. See `test-reports/evidence/defect-CAND01-2-status-badge-color-passed.png`.
 2. **File manager folder-scope is not enforced** — a two-click sequence on the CSS-"disabled"
    "Go to parent folder" button escapes the candidate's own `upload/candidate/{id}` scope into
    the shared `upload/candidate` directory, exposing every candidate's files. Reproduced on two
    independent candidates (Raksa CHANN, Vk KONG), both landing on the identical 63-item/26.47 MB
-   shared listing. See `defect-CAND04-2-parent-folder-escape-raksa-chann.png` and
-   `defect-CAND04-2-parent-folder-escape-vk-kong.png`.
+   shared listing. See `test-reports/evidence/defect-CAND04-2-parent-folder-escape-raksa-chann.png` and
+   `test-reports/evidence/defect-CAND04-2-parent-folder-escape-vk-kong.png`.
 3. **"Degress" (Education card label) and "New Reqeust" (Interview Result summary) spelling
    defects** — cosmetic, reproduced verbatim across sessions.
 4. **Coverage gap, not a defect:** no candidate in the current live dataset (15 candidates as of
@@ -99,8 +99,8 @@ flagging for awareness rather than treating as unresolved.
 
 | ID | Severity | Title | Steps to reproduce | Expected | Actual | Evidence |
 |---|---|---|---|---|---|---|
-| CAND-D1 | Medium | Status badge color does not vary by status | Open Candidate Details for candidates with different statuses (e.g. FOLLOWING UP, PASSED) | Each status renders a distinct color per the app's own status vocabulary (as used elsewhere, e.g. Manage Candidates list) | All statuses checked (5 data points) render identical tan/orange `class="following"` styling | `defect-CAND01-2-status-badge-color-passed.png` |
-| CAND-D2 | **High (security)** | File manager folder scope not enforced above the candidate's own folder | On any Candidate Details page, click "Go to parent folder" in the embedded file manager (twice, in the exact sequence documented in `file-manager-scope-boundary-defect.spec.ts`) despite it appearing CSS-disabled | Navigation blocked; the candidate's file manager stays scoped to `upload/candidate/{id}` | Navigates to the shared `upload/candidate` directory, exposing every candidate's files (63 items / 26.47 MB) | `defect-CAND04-2-parent-folder-escape-raksa-chann.png`, `defect-CAND04-2-parent-folder-escape-vk-kong.png` |
+| CAND-D1 | Medium | Status badge color does not vary by status | Open Candidate Details for candidates with different statuses (e.g. FOLLOWING UP, PASSED) | Each status renders a distinct color per the app's own status vocabulary (as used elsewhere, e.g. Manage Candidates list) | All statuses checked (5 data points) render identical tan/orange `class="following"` styling | `test-reports/evidence/defect-CAND01-2-status-badge-color-passed.png` |
+| CAND-D2 | **High (security)** | File manager folder scope not enforced above the candidate's own folder | On any Candidate Details page, click "Go to parent folder" in the embedded file manager (twice, in the exact sequence documented in `file-manager-scope-boundary-defect.spec.ts`) despite it appearing CSS-disabled | Navigation blocked; the candidate's file manager stays scoped to `upload/candidate/{id}` | Navigates to the shared `upload/candidate` directory, exposing every candidate's files (63 items / 26.47 MB) | `test-reports/evidence/defect-CAND04-2-parent-folder-escape-raksa-chann.png`, `test-reports/evidence/defect-CAND04-2-parent-folder-escape-vk-kong.png` |
 | CAND-D3 | Low (cosmetic) | "Degress" typo on Education card | View the Education card on any candidate with an education entry | Label reads "Degree" | Label reads "Degress" | See exploratory results |
 | CAND-D4 | Low (cosmetic) | "New Reqeust" typo in Interview Result summary | Open "Interview result" on a candidate whose current status is NEW REQUEST | Reads "New Request" | Reads "New Reqeust" | See exploratory results |
 
